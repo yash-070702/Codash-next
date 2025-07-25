@@ -1,103 +1,439 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useState } from "react";
+import {
+  Zap,
+  ArrowRight,
+  Menu,
+  X,
+  LogOut,
+  LayoutDashboard,
+  ChevronDown,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import Logo from "@/app/components/Common/Logo";
+import AnalyticalChart from "@/app/components/HomePage/AnalyticalChart";
+import Features from "@/app/components/HomePage/Features";
+import Platforms from "@/app/components/HomePage/Platforms";
+import Testimonials from "@/app/components/HomePage/Testimonials";
+import Footer from "@/app/components/Common/Footer";
+import { useProfileStore } from "@/store/profileStore";
+import { toast } from "react-toastify";
+
+const HomePage: React.FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [animatedStats, setAnimatedStats] = useState({
+    accuracy: 0,
+    growth: 0,
+    efficiency: 0,
+  });
+
+  const router = useRouter();
+  const user = useProfileStore((state) => state.user);
+  // const logout = useUserStore((state) => state.logout);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isUserDropdownOpen && !target.closest(".user-dropdown")) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isUserDropdownOpen]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimatedStats((prev) => ({
+        accuracy: prev.accuracy < 98 ? prev.accuracy + 1 : 98,
+        growth: prev.growth < 85 ? prev.growth + 1 : 85,
+        efficiency: prev.efficiency < 92 ? prev.efficiency + 1 : 92,
+      }));
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleDashboard = () => {
+    router.push("/dashboard");
+    setIsUserDropdownOpen(false);
+  };
+
+  const handleLogout = () => {
+    // logout();
+    toast.success("Logged out successfully");
+    router.push("/");
+  };
+
+  const getUserInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+      <div className="min-h-screen bg-slate-900 text-white">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Logo />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <a
+                href="#features"
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#platforms"
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                Platforms
+              </a>
+              <a
+                href="#testimonials"
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                Testimonials
+              </a>
+              <a
+                onClick={() => router.push("/about-us")}
+                className="text-gray-300 hover:text-white transition-colors cursor-pointer"
+              >
+                About Us
+              </a>
+
+              {/* User Profile or Auth Buttons */}
+              {user ? (
+                <div className="relative user-dropdown">
+                  <button
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="flex items-center space-x-2 bg-slate-800/50 hover:bg-slate-700/50 rounded-full p-1 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt={user.fullName}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        getUserInitials(user.fullName)
+                      )}
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isUserDropdownOpen && (
+                    <div className="absolute right-0 mt-2 min-w-48 bg-slate-800/95 backdrop-blur-lg rounded-lg border border-slate-700/50 shadow-xl py-2">
+                      <div className="px-4 py-2 border-b border-slate-700/50">
+                        <p className="text-sm font-medium text-white">
+                          {user.fullName}
+                        </p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
+                      </div>
+                      <button
+                        onClick={handleDashboard}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/50 transition-colors flex items-center space-x-2"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </button>
+                      <button
+                     onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/50 transition-colors flex items-center space-x-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                 onClick={() => router.push("/auth")}
+                   
+                    className="text-gray-300 hover:text-white transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                     onClick={() => router.push("/auth")}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-colors"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-gray-300 hover:text-white"
+              >
+                {isMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-slate-800/95 backdrop-blur-lg border-t border-slate-700/50">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <a
+                href="#features"
+                className="block px-3 py-2 text-gray-300 hover:text-white"
+              >
+                Features
+              </a>
+              <a
+                href="#platforms"
+                className="block px-3 py-2 text-gray-300 hover:text-white"
+              >
+                Platforms
+              </a>
+              <a
+                href="#testimonials"
+                className="block px-3 py-2 text-gray-300 hover:text-white"
+              >
+                Testimonials
+              </a>
+              <a
+                  onClick={() => router.push("/about-us")}
+                className="block px-3 py-2 text-gray-300 hover:text-white cursor-pointer"
+              >
+                About Us
+              </a>
+
+              {/* Mobile User Profile or Auth Buttons */}
+              {user ? (
+                <div className="border-t border-slate-700/50 pt-2">
+                  <div className="px-3 py-2 flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                      {user.avatar ? (
+                        <img
+                          src={user.image}
+                          alt={user.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        getUserInitials(user.fullName)
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">
+                        {user.fullName}
+                      </p>
+                      <p className="text-xs text-gray-400">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleDashboard}
+                    className="w-full text-left px-3 py-2 text-gray-300 hover:text-white flex items-center space-x-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </button>
+                  <button
+                 onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 text-gray-300 hover:text-white flex items-center space-x-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                onClick={() => router.push("/auth")}
+                    className="block w-full text-left px-3 py-2 text-gray-300 hover:text-white"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                onClick={() => router.push("/auth")}
+                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-colors mt-2"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <div className="w-10/12 mx-auto">
+        {/* Hero Section */}
+        <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left Content */}
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <div className="inline-flex mt-10 items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full px-4 py-2">
+                    <Zap className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm text-purple-300">
+                      Unified Coding Analytics
+                    </span>
+                  </div>
+                  <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
+                    Master Your
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                      {" "}
+                      Coding Journey
+                    </span>
+                  </h1>
+                  <p className="text-xl text-gray-300 leading-relaxed">
+                    Connect all your coding platforms in one powerful dashboard.
+                    Track progress, analyze performance, and unlock your full
+                    potential with CoDash.
+                  </p>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-8">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-400">
+                      {animatedStats.accuracy}%
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Insight Accuracy
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-400">
+                      {animatedStats.growth}%
+                    </div>
+                    <div className="text-sm text-gray-400">Skill Growth</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-indigo-400">
+                      {animatedStats.efficiency}%
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Workflow Efficiency
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {user ? (
+                    <button
+                     onClick={() => router.push("/dashboard")}
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-colors flex items-center justify-center space-x-2 font-semibold"
+                    >
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Go to Dashboard</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => router.push("/auth")}
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-colors flex items-center justify-center space-x-2 font-semibold"
+                      >
+                        <span>Get Started</span>
+                        <ArrowRight className="h-5 w-5" />
+                      </button>
+                      <button
+                     onClick={() => router.push("/auth")}
+                        className="border border-slate-600 text-white px-8 py-4 rounded-lg hover:border-slate-500 hover:bg-slate-800/50 transition-colors"
+                      >
+                        Sign In
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Content - Dashboard Preview */}
+              <AnalyticalChart />
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section
+          id="features"
+          className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-800/30"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <Features />
+        </section>
+
+        {/* Platforms Section */}
+        <section id="platforms" className="py-20 px-4 sm:px-6 lg:px-8">
+          <Platforms />
+        </section>
+
+        {/* Testimonials Section */}
+        <section
+          id="testimonials"
+          className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-800/30"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <Testimonials />
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-bold mb-6">
+              Ready to Transform Your Coding Journey?
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Start tracking your progress across multiple platforms and unlock
+              insights that will accelerate your growth as a developer.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {user ? (
+                <button
+                 onClick={() => router.push("/dashhboard")}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-colors flex items-center justify-center space-x-2 font-semibold"
+                >
+                  <LayoutDashboard className="h-5 w-5" />
+                  <span>Go to Dashboard</span>
+                </button>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => router.push("/auth")}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-colors flex items-center justify-center space-x-2 font-semibold"
+                  >
+                    <span>Get Started</span>
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                  <button
+                   onClick={() => router.push("/auth")}
+                    className="border border-slate-600 text-white px-8 py-4 rounded-lg hover:border-slate-500 hover:bg-slate-800/50 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <Footer />
+      </div>
     </div>
   );
-}
+};
+
+export default HomePage;
