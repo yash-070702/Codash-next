@@ -19,7 +19,7 @@ const AboutUs: React.FC = () => {
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed px-4">
             Discover our story, mission, and the passionate team behind our
-            success. We're building something extraordinary together.
+            success. We&apos;re building something extraordinary together.
           </p>
         </div>
 
