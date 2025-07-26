@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Logo from "@/app/components/Common/Logo"; 
 import { useAuthStore } from "@/store/authStore";
 import { sendOtp } from "@/services/authService";
+
 interface AuthProps {
   currentPage: string;
   setCurrentPage: React.Dispatch<React.SetStateAction<string>>;
@@ -65,9 +66,9 @@ const SignupPage: React.FC<AuthProps> = ({ currentPage, setCurrentPage }) => {
 
     try {
      await sendOtp(email, router, setIsLoading);
-      toast.success("OTP sent successfully! Please check your email.");
+      // toast.success("OTP sent successfully! Please check your email.");
     } catch (error) {
-      toast.error("Failed to send OTP. Please try again.");
+      // toast.error("Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }

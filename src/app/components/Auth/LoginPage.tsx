@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { login } from "@/services/authService";
 import { useForm } from "react-hook-form";
 import Logo from "@/app/components/Common/Logo";
 
@@ -74,8 +74,7 @@ useEffect(() => {
         localStorage.removeItem("rememberedCredentials");
       }
       
-      // Dispatch login action
-    //   dispatch(login(data.email, data.password, navigate));
+       await login(data.email, data.password,router);
       
     } catch (error) {
       console.error("Login failed:", error);
