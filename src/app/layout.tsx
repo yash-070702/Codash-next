@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Codash",
+  title: "Codash | (Coding Activity Tracker)",
   description: "Track your coding journey",
   icons: {
     icon: "/favicon.ico",
