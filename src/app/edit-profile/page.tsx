@@ -387,19 +387,7 @@ await updateProfile(token, formDataWithIds, router);
               </div>
 
               {/* Password match indicator */}
-              {passwordData.newPassword && passwordData.confirmPassword && (
-                <div
-                  className={`text-sm mt-4 ${
-                    passwordData.newPassword === passwordData.confirmPassword
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
-                >
-                  {passwordData.newPassword === passwordData.confirmPassword
-                    ? "✓ Passwords match"
-                    : "✗ Passwords do not match"}
-                </div>
-              )}
+            
 
               <button
                 onClick={handlePasswordSave}
