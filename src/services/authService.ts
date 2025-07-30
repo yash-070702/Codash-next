@@ -262,3 +262,65 @@ export const login=async(
 
     setLoading(false);
   };
+
+export const logout = async (
+  router: AppRouterInstance,
+) => {
+  const toastId = toast.loading("Logging you out...");
+  setLoading(true);
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw {
+        response: { status: res.status, data },
+        message: data?.message || "Logout failed",
+      };
+    }
+
+
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    toast.dismiss(toastId);
+    toast.success(" Logged out successfully.");
+    router.push("/"); 
+  } catch (error: any) {
+    toast.dismiss(toastId);
+
+    let errorMessage = "Logout failed. Please try again.";
+
+    if (error.response) {
+      const status = error.response.status;
+      const msg = error.response.data?.message || error.response.data?.error;
+
+      switch (status) {
+        case 401:
+          errorMessage = "You are not logged in.";
+          break;
+        case 403:
+          errorMessage = "You don't have permission to perform this action.";
+          break;
+        case 500:
+          errorMessage = "Server error. Please try again later.";
+          break;
+        default:
+          errorMessage = msg || "Unexpected error occurred during logout.";
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    toast.error(`❌ ${errorMessage}`);
+    console.error("Logout Error:", error);
+  }
+
+  setLoading(false);
+};

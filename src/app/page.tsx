@@ -19,6 +19,7 @@ import Testimonials from "@/app/components/HomePage/Testimonials";
 import Footer from "@/app/components/Common/Footer";
 import { useProfileStore } from "@/store/profileStore";
 import { toast } from "react-toastify";
+import { logout } from "@/services/authService";
 
 const HomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,9 +61,8 @@ const HomePage: React.FC = () => {
     setIsUserDropdownOpen(false);
   };
 
-  const handleLogout = () => {
-    // logout();
-    toast.success("Logged out successfully");
+  const handleLogout = async () => {
+     await logout(router);
     router.push("/");
   };
 

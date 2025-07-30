@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProfileStore } from "@/store/profileStore";
-
+import { logout } from "@/services/authService";
 import { CiLogin } from "react-icons/ci";
 import { IoIosPersonAdd } from "react-icons/io";
 import { LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
@@ -30,9 +30,10 @@ const Header = () => {
       .slice(0, 2);
   };
 
-    const handleLogout = () => {
-      // logout();
-      toast.success("Logged out successfully");
+    const handleLogout = async() => {
+      await logout(router);
+      console.log("logout api called");
+     
       router.push("/");
     };
 
