@@ -9,6 +9,7 @@ import {
   RotateCcw,
   ArrowUpRight,
 } from "lucide-react";
+import ActivityHeatmap from "./ActivityHeatmap";
 
 type OverviewProps = {
     percentage: number;
@@ -241,7 +242,7 @@ const Overview = () => {
         {/* Threat Summary */}
         <div className="lg:col-span-2 bg-gray-800 rounded-lg p-4 md:p-6">
         {/* <ActivityHeatmap/> */}
-hello
+{/* <ActivityHeatmap /> */}
         </div>
 
         {/* Threats By Virus */}

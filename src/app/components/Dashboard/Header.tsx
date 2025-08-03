@@ -28,7 +28,7 @@ const Header = ({
 
   const handleLogout = async () => {
     await logout(router); 
-    router.push('/login'); 
+    router.push('/auth'); 
   };
 
   const getUserInitials = (name: string) => {

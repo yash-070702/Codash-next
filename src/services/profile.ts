@@ -6,8 +6,6 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 import { logout } from "./authService";
 
 
-const setToken = useAuthStore.getState().setToken;
-const setUser = useProfileStore.getState().setUser;
 const setLoading = useProfileStore.getState().setLoading;
 
 export const updateProfile = async (
