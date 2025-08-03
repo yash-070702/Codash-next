@@ -50,6 +50,9 @@ const Header = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUserDropdownOpen]);
 
+  if (!user) return null; 
+
+
  return (
     <div>
       <div className="flex items-center justify-between mb-6 md:mb-8">
