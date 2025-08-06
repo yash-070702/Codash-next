@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import Logo from "@/app/components/Common/Logo";
 
 import { toast } from "react-toastify"; 
+import PublicRoute from "../PublicRoute";
 
 interface AuthProps {
   currentPage: string;
@@ -85,6 +86,7 @@ useEffect(() => {
   };
 
   return (
+    <PublicRoute>
     <div className="min-h-screen max-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-7xl h-full max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)] lg:max-h-[calc(100vh-4rem)] rounded-2xl sm:rounded-3xl lg:rounded-4xl border-2 border-white flex flex-col lg:flex-row overflow-hidden">
         {/* Left Side - Hero Section */}
@@ -264,6 +266,7 @@ useEffect(() => {
         </div>
       </div>
     </div>
+    </PublicRoute>
   );
 };
 

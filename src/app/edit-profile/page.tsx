@@ -13,7 +13,7 @@ import {
   Github,
   Monitor,
 } from "lucide-react";
-
+import PrivateRoute from "@/app/components/PrivateRoute";
 import { useRouter } from "next/navigation";
 import Header from "../components/Common/Header";
 import { deleteProfile, updatePassword, updateProfile } from "@/services/profile";
@@ -125,14 +125,17 @@ await updateProfile(token, formDataWithIds, router);
 
    if (!user) {
     return (
+      <PrivateRoute>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
+      </PrivateRoute>
     );
   }
 
    return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+    <PrivateRoute>
+       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
       <Header />
       <div className="max-w-6xl mx-auto">
         {/* Header */}
@@ -519,6 +522,8 @@ await updateProfile(token, formDataWithIds, router);
         </div>
       </div>
     </div>
+    </PrivateRoute>
+   
   );
 };
 

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { signUp } from "@/services/authService";
 import { sendOtp } from "@/services/authService";
 import Logo from "@/app/components/Common/Logo";
+import PublicRoute from "../components/PublicRoute";
 
 const OTPInput = () => {
   const [otp, setOtp] = useState(new Array(6).fill(""));
@@ -109,7 +110,8 @@ const OTPInput = () => {
 
   if (!signupData) {
     return (
-      <div className="h-screen max-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <PublicRoute>
+         <div className="h-screen max-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
         <div className="text-center">
           <p className="text-white text-xl mb-4">No signup data found</p>
           <button
@@ -120,10 +122,13 @@ const OTPInput = () => {
           </button>
         </div>
       </div>
+      </PublicRoute>
+     
     );
   }
 
   return (
+    <PublicRoute>
     <div className="h-screen max-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       <div className="flex-shrink-0 pt-6 sm:pt-8">
         <div className="text-center">
@@ -244,6 +249,7 @@ const OTPInput = () => {
         </div>
       </div>
     </div>
+    </PublicRoute>
   );
 };
 

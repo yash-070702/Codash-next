@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import './globals.css';
+import { AuthProvider } from './context/AuthContext';
 
 export const metadata: Metadata = {
   title: "Codash | (Coding Activity Tracker)",
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+       <AuthProvider>
         {children}
         <ToastContainer
           position="top-right"
@@ -32,6 +34,7 @@ export default function RootLayout({
           pauseOnHover
           theme="colored"
         />
+      </AuthProvider>
       </body>
     </html>
   );
