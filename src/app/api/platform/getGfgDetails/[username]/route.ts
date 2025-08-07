@@ -18,16 +18,6 @@ interface Params {
   username: string;
 }
 
-interface Info {
-  userName: string;
-  fullName?: string;
-  institution?: string;
-  rank?: number;
-  score?: number;
-  streak?: number;
-  totalSolved?: number;
-}
-
 interface EnhancedProfile {
   profileImageUrl?: string | null;
   bio?: string | null;
@@ -40,13 +30,18 @@ interface EnhancedProfile {
 
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Params }
+  _req: NextRequest,
+  context: { params: Promise<{ username: string }> }
 ) {
-  const { username } = params;
+  // Await the params since they're now asynchronous in Next.js 15+
+  const { username } = await context.params;
+
   if (!username) {
     return NextResponse.json(
-      { success: false, message: "GFG username is required" },
+      {
+        success: false,
+        message: 'LeetCode username is required',
+      },
       { status: 400 }
     );
   }
