@@ -1,27 +1,51 @@
+import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
-import { NextRequest, NextResponse } from 'next/server';
-import {
-  generateHeatmapData,
-  generateEmptyHeatmapData,
-  getEnhancedProfileData,
-  calculateTotalQuestions,
-  generateInsights,
-  getDifficultyAnalysis,
-  calculateActivityMetrics,
-  calculateProfileCompleteness,
-} from "@/lib/gfg"; // Adjust path as needed
+import * as cheerio from "cheerio";
+import { getEnhancedProfileData} from "@/lib/gfg";
+import { calculateTotalQuestions } from "@/lib/gfg";
+import { generateHeatmapData } from "@/lib/gfg";
+import { generateEmptyHeatmapData } from "@/lib/gfg";
+import { generateInsights } from "@/lib/gfg";
+import { calculateProfileCompleteness } from "@/lib/gfg";
+import { calculateActivityMetrics } from "@/lib/gfg";
+import { getDifficultyAnalysis } from "@/lib/gfg";
 
-const BASE_URL = "https://practiceapi.geeksforgeeks.org/api/v1/user";
+
+const BASE_URL = "https://geeks-for-geeks-api.vercel.app";
+
+
+interface Params {
+  username: string;
+}
+
+interface Info {
+  userName: string;
+  fullName?: string;
+  institution?: string;
+  rank?: number;
+  score?: number;
+  streak?: number;
+  totalSolved?: number;
+}
+
+interface EnhancedProfile {
+  profileImageUrl?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  joinDate?: string | null;
+  badges?: string[];
+  following?: number;
+  followers?: number;
+}
+
 
 export async function GET(
-  _req: NextRequest,
-  context: { params: Promise<{ username: string }> }
+  request: NextRequest,
+  { params }: { params: Params }
 ) {
-  // Await the params since they're now asynchronous in Next.js 15+
-  const { username } = await context.params;
-
+  const { username } = params;
   if (!username) {
-    return Response.json(
+    return NextResponse.json(
       { success: false, message: "GFG username is required" },
       { status: 400 }
     );
@@ -32,18 +56,15 @@ export async function GET(
     const { info, solvedStats } = profileResponse.data;
 
     if (!info || !info.userName) {
-      return Response.json(
-        {
-          success: false,
-          message: "GFG user not found or invalid username",
-        },
+      return NextResponse.json(
+        { success: false, message: "GFG user not found or invalid username" },
         { status: 404 }
       );
     }
 
     const year = new Date().getFullYear();
-    let calendar = {};
-    let heatmapData:any = [];
+    let calendar: any = {};
+    let heatmapData: any = [];
 
     try {
       const calendarResponse = await axios.get(
@@ -51,73 +72,79 @@ export async function GET(
       );
       calendar = calendarResponse.data;
       heatmapData = generateHeatmapData(calendar, year);
-    } catch (calendarError:any) {
-      console.warn("Calendar data not available:", calendarError.message);
+    } catch {
       heatmapData = generateEmptyHeatmapData(year);
     }
 
-    let enhancedProfile:any = {};
+    let enhancedProfile: EnhancedProfile = {};
     try {
       enhancedProfile = await getEnhancedProfileData(username);
-    } catch (error:any) {
-      console.warn("Enhanced profile data not available:", error.message);
-    }
+    } catch {}
 
     const totalQuestionsCount = calculateTotalQuestions(solvedStats);
     const insights = generateInsights(solvedStats, calendar, info);
     const difficultyAnalysis = getDifficultyAnalysis(solvedStats);
     const activityMetrics = calculateActivityMetrics(calendar);
 
-    return Response.json(
-      {
-        success: true,
-        message: "GFG data fetched successfully",
-        data: {
-          profile: {
-            username: info.userName,
-            fullName: info.fullName,
-            institution: info.institution,
-            rank: info.rank,
-            score: info.score,
-            streak: info.streak,
-            totalProblemsSolved: info.totalSolved,
-            totalQuestionsCount,
-            profileImageUrl: enhancedProfile.profileImageUrl || null,
-            bio: enhancedProfile.bio || null,
-            location: enhancedProfile.location || null,
-            joinDate: enhancedProfile.joinDate || null,
-            badges: enhancedProfile.badges || [],
-            following: enhancedProfile.following || 0,
-            followers: enhancedProfile.followers || 0,
-            profileCompleteness: calculateProfileCompleteness(
-              info,
-              enhancedProfile
-            ),
-          },
-          solvedStats,
-          calendar,
-          heatmap: heatmapData,
-          insights,
-          difficultyAnalysis,
-          activityMetrics,
+    return NextResponse.json({
+      success: true,
+      message: "GFG data fetched successfully",
+      data: {
+        profile: {
+          username: info.userName,
+          fullName: info.fullName,
+          institution: info.institution,
+          rank: info.rank,
+          score: info.score,
+          streak: info.streak,
+          totalProblemsSolved: info.totalSolved,
+          totalQuestionsCount,
+          profileImageUrl: enhancedProfile.profileImageUrl || null,
+          bio: enhancedProfile.bio || null,
+          location: enhancedProfile.location || null,
+          joinDate: enhancedProfile.joinDate || null,
+          badges: enhancedProfile.badges || [],
+          following: enhancedProfile.following || 0,
+          followers: enhancedProfile.followers || 0,
+          profileCompleteness: calculateProfileCompleteness(
+            info,
+            enhancedProfile
+          ),
         },
+        solvedStats,
+        calendar,
+        heatmap: heatmapData,
+        insights,
+        difficultyAnalysis,
+        activityMetrics,
       },
-      { status: 200 }
-    );
-  } catch (error:any) {
-    const status = error.response?.status || 500;
-    const message =
-      status === 404
-        ? "GFG user not found or API doesn't support this username yet"
-        : "Failed to fetch GFG details";
-
-    return Response.json(
+    });
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "GFG user not found or API doesn't support this username yet",
+          error: error.response.data,
+        },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
       {
         success: false,
-        message,
-        error: error.response?.data || error.message,
+        message: "Failed to fetch GFG details",
+        error: error.message,
       },
-      { status }
+      { status: 500 }
     );
   }
 }
+
+
+
+
+
+
+
+

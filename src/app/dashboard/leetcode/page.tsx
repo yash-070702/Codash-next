@@ -2,34 +2,32 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { MoreHorizontal, AlertCircle, User, RefreshCw } from "lucide-react";
-import * as Chart from "chart.js";
+import Chart from "chart.js/auto";
 import ActivityHeatmap from "@/app/components/Dashboard/ActivityHeatmap";
 import { getLeeCodeDetails } from "@/services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
 
-// Register Chart.js components
-Chart.Chart.register(
-  Chart.ArcElement,
-  Chart.Tooltip,
-  Chart.Legend,
-  Chart.DoughnutController
-);
+
+
 
 
 const LeetCode = () => {
-  const [selectedSegment, setSelectedSegment] = useState(null);
+  const [selectedSegment, setSelectedSegment] = useState<any>(null);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState(null);
-const [leetCodeData, setLeetCodeData] = useState(null);
+const [error, setError] = useState<string | null>(null);
+
+const [leetCodeData, setLeetCodeData] = useState<any>(null);
 
   const [questions, setQuestions] = useState([]);
     const user = useProfileStore((state) => state.user);
-    const token = useAuthStore((state) => state.token);
-
-  const chartRef = useRef(null);
-  const chartInstanceRef = useRef(null);
+    const token:string|null = useAuthStore((state) => state.token);
+    if (!token) {
+  throw new Error("No token available");
+}
+const chartRef = useRef<HTMLCanvasElement | null>(null);
+const chartInstanceRef = useRef<Chart | null>(null);
 
   // Check if username exists
   const hasUsername = user?.leetCodeURL && user.leetCodeURL.trim() !== "";
@@ -304,7 +302,7 @@ const [leetCodeData, setLeetCodeData] = useState(null);
   const totalSolved = baseStats.reduce((acc, stat) => acc + stat.solved, 0);
   const totalQuestions = baseStats.reduce((acc, stat) => acc + stat.total, 0);
   const totalRecentSolved = baseStats.reduce(
-    (acc, stat) => acc + stat.details.recentSolved,
+    (acc, stat:any) => acc + stat.details.recentSolved,
     0
   );
 
@@ -335,77 +333,69 @@ const [leetCodeData, setLeetCodeData] = useState(null);
       (acc, stat) => acc + stat.solved,
       0
     );
+ useEffect(() => {
+    const canvas = chartRef.current;
+    if (!canvas) return;
 
-    useEffect(() => {
-      if (chartRef.current) {
-        const ctx = chartRef.current.getContext("2d");
+    // Destroy existing chart
+    chartInstanceRef.current?.destroy();
 
-        // Destroy existing chart if it exists
-        if (chartInstanceRef.current) {
-          chartInstanceRef.current.destroy();
-        }
-
-        chartInstanceRef.current = new Chart.Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels: chartData.map((stat) => stat.level),
-            datasets: [
-              {
-                data: chartData.map((stat) => stat.solved),
-                backgroundColor: chartData.map((stat) => stat.chartColor),
-                borderColor: "#1f2937",
-                borderWidth: 3,
-                hoverOffset: 8,
-              },
-            ],
+    // Create new chart
+    chartInstanceRef.current = new Chart(canvas, {
+      type: "doughnut",
+      data: {
+        labels: chartData.map((stat) => stat.level),
+        datasets: [
+          {
+            data: chartData.map((stat) => stat.solved),
+            backgroundColor: chartData.map((stat) => stat.chartColor),
+            borderColor: "#1f2937",
+            borderWidth: 3,
+            hoverOffset: 8,
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: "60%",
-            plugins: {
-              legend: {
-                display: false,
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "60%",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#374151",
+            titleColor: "#ffffff",
+            bodyColor: "#ffffff",
+            borderColor: "#6b7280",
+            borderWidth: 1,
+            callbacks: {
+              label: function (context) {
+                const stat = chartData[context.dataIndex];
+                return `${stat.level}: ${stat.solved}/${stat.total}`;
               },
-              tooltip: {
-                backgroundColor: "#374151",
-                titleColor: "#ffffff",
-                bodyColor: "#ffffff",
-                borderColor: "#6b7280",
-                borderWidth: 1,
-                callbacks: {
-                  label: function (context) {
-                    const stat = chartData[context.dataIndex];
-                    return `${stat.level}: ${stat.solved}/${stat.total}`;
-                  },
-                },
-              },
-            },
-            onClick: (event, activeElements) => {
-              if (activeElements.length > 0) {
-                const index = activeElements[0].index;
-                const clickedStat = chartData[index];
-                setSelectedSegment(
-                  selectedSegment?.level === clickedStat.level
-                    ? null
-                    : clickedStat
-                );
-              }
-            },
-            onHover: (event, activeElements) => {
-              event.native.target.style.cursor =
-                activeElements.length > 0 ? "pointer" : "default";
             },
           },
-        });
-      }
+        },
+        onClick: (event, activeElements) => {
+          if (activeElements.length > 0) {
+            const index = activeElements[0].index;
+            const clickedStat = chartData[index];
+            setSelectedSegment(
+              selectedSegment?.level === clickedStat.level ? null : clickedStat
+            );
+          }
+        },
+        onHover: (event: any, activeElements) => {
+          event.native.target.style.cursor =
+            activeElements.length > 0 ? "pointer" : "default";
+        },
+      },
+    });
 
-      return () => {
-        if (chartInstanceRef.current) {
-          chartInstanceRef.current.destroy();
-        }
-      };
-    }, [selectedSegment]);
+    // Cleanup on unmount
+    return () => {
+      chartInstanceRef.current?.destroy();
+    };
+  }, [chartData, selectedSegment]);
 
     return (
       <div className="flex flex-col items-center">
@@ -423,7 +413,7 @@ const [leetCodeData, setLeetCodeData] = useState(null);
         {/* Legend or Details */}
         {!selectedSegment ? (
           <div className="space-y-2 w-full">
-            {questionStats.map((stat, index) => (
+            {questionStats.map((stat:any, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between text-sm cursor-pointer hover:bg-gray-700 p-3 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md"
@@ -479,7 +469,7 @@ const [leetCodeData, setLeetCodeData] = useState(null);
                 Top Topics:
               </span>
               <div className="flex flex-wrap gap-2 mt-2">
-                {selectedSegment.details.topics.map((topic, idx) => (
+                {selectedSegment.details.topics.map((topic:any, idx:number) => (
                   <span
                     key={idx}
                     className="text-xs bg-gradient-to-r from-gray-600 to-gray-500 px-3 py-1 rounded-full text-white shadow-sm"
@@ -495,30 +485,31 @@ const [leetCodeData, setLeetCodeData] = useState(null);
     );
   };
 
-const toggleViewAll = (e) => {
-    e.preventDefault();
-    setShowAllQuestions(!showAllQuestions);
-  };
+const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+  e.preventDefault();
+  setShowAllQuestions(!showAllQuestions);
+};
   // Get questions to display based on current state
   const displayedQuestions = showAllQuestions
     ? questions
     : questions.slice(0, 3);
 
   // Function to handle topic tag click
-  const handleTopicClick = (e, slug) => {
+  const handleTopicClick = (e:any, slug:any) => {
     e.stopPropagation(); 
 
     window.open(`/topics/${slug}`, "_blank");
   };
 
   // Function to handle question click
-  const handleQuestionClick = (url) => {
+  const handleQuestionClick = (url:any) => {
     // In a real application, you would use react-router or Next.js router
     // For demo purposes, we'll simulate navigation
     window.open(url, "_blank");
     // Or use: window.location.href = url; for same tab navigation
   };
-  const getDifficultyColor = (difficulty) => {
+
+  const getDifficultyColor = (difficulty:any) => {
     switch (difficulty) {
       case "Easy":
         return "bg-green-500/20 text-green-400";
@@ -711,7 +702,7 @@ const toggleViewAll = (e) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {displayedQuestions.map((question, index) => (
+                  {displayedQuestions.map((question:any, index) => (
                     <tr
                       key={question.id}
                       className="hover:bg-gray-700/50 transition-colors cursor-pointer"
@@ -742,7 +733,7 @@ const toggleViewAll = (e) => {
                       </td>
                       <td className="py-3 px-2 text-sm text-gray-300">
                         <div className="flex flex-wrap gap-1 max-w-[200px] sm:max-w-[250px] md:max-w-[300px]">
-                          {question.topicTags.map((tag, tagIndex) => (
+                          {question.topicTags.map((tag:any, tagIndex:any) => (
                             <span
                               key={tag.slug}
                               onClick={(e) => handleTopicClick(e, tag.slug)}
