@@ -89,21 +89,27 @@ export const getGFGDetails = async (
     if (!username) throw new Error("No username provided to fetch GFG stats.");
 
     const res = await fetch(`/api/platform/getGfgDetails/${username}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+});
+console.log("GFG Details Response:", res);
+let data;
+try {
+  const text = await res.text();
+  data = text ? JSON.parse(text) : {};
+} catch (e) {
+  throw new Error("Invalid JSON response from server.");
+}
 
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      throw {
-        response: { status: res.status, data },
-        message: data.message || "Failed to fetch GFG details",
-      };
-    }
+if (!res.ok || !data.success) {
+  throw {
+    response: { status: res.status, data },
+    message: data.message || "Failed to fetch GFG details",
+  };
+}
 
     result = data;
 

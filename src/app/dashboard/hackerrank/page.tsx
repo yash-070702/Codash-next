@@ -1,38 +1,26 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { AlertCircle, User, RefreshCw,ChevronDown } from "lucide-react";
+import { MoreHorizontal, AlertCircle, User, RefreshCw } from "lucide-react";
 import Chart from "chart.js/auto";
 import ActivityHeatmap from "@/app/components/Dashboard/ActivityHeatmap";
-import { getGFGDetails } from "@/services/platform";
+import { getLeeCodeDetails } from "@/services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
 
 
-type Question = {
-  id: string;
-  title?: string;
-  question?: string;
-  questionUrl?: string;
-  difficulty?: string; 
-};
 
-const GFG = () => {
+
+
+const LeetCode = () => {
   const [selectedSegment, setSelectedSegment] = useState<any>(null);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
 
-const [GFGData, setGFGData] = useState<any>(null);
- const [easyQuestions, setEasyQuestions] = useState<Question[]>([]);
-const [mediumQuestions, setMediumQuestions] = useState<Question[]>([]);
-const [hardQuestions, setHardQuestions] = useState<Question[]>([]);
-  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
-  const [selectedDifficulty, setSelectedDifficulty] = useState("All");
- const [isDropdownOpen, setIsDropdownOpen] = useState<any>(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+const [leetCodeData, setLeetCodeData] = useState<any>(null);
 
-  const difficultyOptions = ["All", "Easy", "Medium", "Hard"];;
+  const [questions, setQuestions] = useState([]);
     const user = useProfileStore((state) => state.user);
     const token:string|null = useAuthStore((state) => state.token);
     if (!token) {
@@ -42,125 +30,38 @@ const chartRef = useRef<HTMLCanvasElement | null>(null);
 const chartInstanceRef = useRef<Chart | null>(null);
 
   // Check if username exists
-  const hasUsername = user?.gfgURL && user.gfgURL.trim() !== "";
+  const hasUsername = user?.leetCodeURL && user.leetCodeURL.trim() !== "";
 
-  // Fetch GFG details
+  // Fetch LeetCode details
   useEffect(() => {
     if (!hasUsername) return;
 
-    const fetchGFGDetails = async () => {
+    const fetchLeetCodeDetails = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const username = user.gfgURL;
-        const details = await getGFGDetails(username, token);
-         console.log("GFG details fetched:", details);
-          setGFGData(details);
-      setEasyQuestions(
-          (details?.data?.solvedStats?.easy?.questions || []).map((q:any) => ({
-            ...q,
-            difficulty: "Easy",
-          }))
-        );
-        setMediumQuestions(
-          (details?.data?.solvedStats?.medium?.questions || []).map((q:any) => ({
-            ...q,
-            difficulty: "Medium",
-          }))
-        );
-        setHardQuestions(
-          (details?.data?.solvedStats?.hard?.questions || []).map((q:any) => ({
-            ...q,
-            difficulty: "Hard",
-          }))
-        );
-    
+        const username = user.leetCodeURL;
+        const details = await getLeeCodeDetails(username, token);
+        // console.log("LeetCode details fetched:", details);
+          setLeetCodeData(details);
+        setQuestions(details?.latestQuestions|| []);
+      
+        
       } catch (error) {
-        console.error("Error fetching GFG details:", error);
-        setError("Failed to fetch GFG data. Please try again.");
+        console.error("Error fetching LeetCode details:", error);
+        setError("Failed to fetch LeetCode data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchGFGDetails();
-  }, [hasUsername, user?.gfgURL, token]);
+    fetchLeetCodeDetails();
+  }, [hasUsername, user?.leetCodeURL, token]);
 
-    useEffect(() => {
-    setAllQuestions([
-      ...easyQuestions,
-      ...mediumQuestions,
-      ...hardQuestions,
-    ]);
-  }, [easyQuestions, mediumQuestions, hardQuestions]);
+  console.log("LeetCode Data:", leetCodeData);
+  console.log("Questions:", questions);
 
-   useEffect(() => {
-    const handleClickOutside = (event:any) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-    useEffect(() => {
-    console.log('Selected Difficulty:', selectedDifficulty);
-    console.log('Current Questions:', getCurrentQuestions());
-    console.log('Displayed Questions:', displayedQuestions);
-  }, [selectedDifficulty, showAllQuestions]);
-
-  const getQuestionsForDifficulty = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return easyQuestions;
-      case "Medium":
-        return mediumQuestions;
-      case "Hard":
-        return hardQuestions;
-      default:
-        return allQuestions;
-    }
-  };
-
-      const toggleViewAll = (
-    e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
-  ) => {
-    e.preventDefault();
-    setShowAllQuestions((v) => !v);
-  };
-
-   const getCurrentQuestions = () => getQuestionsForDifficulty(selectedDifficulty);
-
-  const displayedQuestions = showAllQuestions
-    ? getCurrentQuestions()
-    : getCurrentQuestions().slice(0, 3);
-    const handleDifficultySelect = (difficulty: any) => {
-    setSelectedDifficulty(difficulty);
-    setIsDropdownOpen(false);
-    setShowAllQuestions(false);
-  };
-
-   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-500/20 text-green-400";
-      case "Medium":
-        return "bg-yellow-500/20 text-yellow-400";
-      case "Hard":
-        return "bg-red-500/20 text-red-400";
-      default:
-        return "bg-gray-500/20 text-gray-400";
-    }
-  };
-
-
-    const handleQuestionClick = (url:any) => {
-   window.open(url, "_blank");
-  };
   // No Username Screen
   const NoUsernameScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
@@ -171,10 +72,10 @@ const chartInstanceRef = useRef<Chart | null>(null);
               <User className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
-              GFG Analytics
+              LeetCode Analytics
             </h1>
             <p className="text-gray-400 text-lg mb-8 max-w-md">
-              Connect your GFG profile to view your coding progress and
+              Connect your LeetCode profile to view your coding progress and
               performance analytics
             </p>
           </div>
@@ -188,7 +89,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
             </div>
 
             <p className="text-gray-300 mb-6 text-center">
-              Please provide your GFG username in your profile settings to
+              Please provide your LeetCode username in your profile settings to
               view your analytics dashboard.
             </p>
 
@@ -226,7 +127,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                GFG Analytics
+                LeetCode Analytics
               </h1>
               <p className="text-gray-400 text-sm md:text-base mt-1">
                 Fetching your coding progress and performance...
@@ -249,7 +150,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
               Loading Your Data
             </h2>
             <p className="text-gray-400 text-lg mb-8">
-              Please wait while we fetch your GFG statistics...
+              Please wait while we fetch your LeetCode statistics...
             </p>
           </div>
 
@@ -278,7 +179,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
               <p className="text-gray-400 text-sm text-center">
                 Fetching data for:{" "}
                 <span className="text-white font-medium">
-                  {user?.gfgURL}
+                  {user?.leetCodeURL}
                 </span>
               </p>
             </div>
@@ -329,56 +230,69 @@ const chartInstanceRef = useRef<Chart | null>(null);
     return <ErrorScreen />;
   }
 
-   const baseStats = [
+  // Rest of your existing component code (baseStats, questionStats, LeetCodeDonut, etc.)
+  const baseStats = [
     {
       level: "Easy",
-      solved:
-        GFGData?.data?.solvedStats?.easy.count +
-        GFGData?.data?.solvedStats?.basic.count,
-      total: GFGData?.data?.profile?.totalQuestionsCount,
+      solved: leetCodeData?.submissions?.Easy,
+      total: leetCodeData?.leetCodeStats?.easy,
       color: "text-green-400",
       bgColor: "bg-green-400",
       strokeColor: "stroke-green-400",
       chartColor: "#4ade80",
       details: {
-        accuracy:
-          parseInt(
-            GFGData?.data?.difficultyAnalysis?.breakdown?.easy?.percentage
-          ) +
-          parseInt(
-            GFGData?.data?.difficultyAnalysis?.breakdown?.basic?.percentage
-          ) +
-          "%",
+  accuracy:
+   leetCodeData?.submissions?.Easy !== undefined &&
+    leetCodeData?.leetCodeStats?.easy
+      ? Math.round(
+          (leetCodeData?.submissions?.Easy /
+            leetCodeData.leetCodeStats.easy) *
+            100
+        ) + "%"
+      : "N/A",
+  topics: ["Arrays", "Strings", "Hash Tables"],
+},
 
-        topics: ["Arrays", "Strings", "Hash Tables"],
-      },
     },
     {
       level: "Medium",
-      solved: GFGData?.data?.solvedStats?.medium.count,
-      total: GFGData?.data?.profile?.totalQuestionsCount,
+      solved: leetCodeData?.submissions?.Medium,
+      total: leetCodeData?.leetCodeStats?.medium,
       color: "text-yellow-400",
       bgColor: "bg-yellow-400",
       strokeColor: "stroke-yellow-400",
       chartColor: "#facc15",
       details: {
-        accuracy:
-          GFGData?.data?.difficultyAnalysis?.breakdown?.medium?.percentage +
-          "%",
+         accuracy:
+    leetCodeData?.submissions?.Medium !== undefined &&
+    leetCodeData?.leetCodeStats?.medium
+      ? Math.round(
+          ( leetCodeData?.submissions?.Medium/
+            leetCodeData.leetCodeStats.medium) *
+            100
+        ) + "%"
+      : "N/A",
         topics: ["Trees", "DP", "Graphs"],
       },
     },
     {
       level: "Hard",
-      solved: GFGData?.data?.solvedStats?.hard.count,
-      total: GFGData?.data?.profile?.totalQuestionsCount,
+      solved:  leetCodeData?.submissions?.Hard,
+      total: leetCodeData?.leetCodeStats?.hard,
       color: "text-red-400",
       bgColor: "bg-red-400",
       strokeColor: "stroke-red-400",
       chartColor: "#f87171",
       details: {
-        accuracy:
-          GFGData?.data?.difficultyAnalysis?.breakdown?.hard?.percentage + "%",
+         accuracy:
+   leetCodeData?.submissions?.Hard !== undefined &&
+    leetCodeData?.leetCodeStats?.hard
+      ? Math.round(
+          (leetCodeData?.submissions?.Hard /
+            leetCodeData.leetCodeStats.hard) *
+            100
+        ) + "%"
+      : "N/A",
         topics: ["Advanced Algorithms", "System Design"],
       },
     },
@@ -411,7 +325,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
     },
   ];
 
-  const GFGDonut = () => {
+  const LeetCodeDonut = () => {
     // Filter out the "Total" entry for chart display
     const chartData = questionStats.filter((stat) => stat.level !== "Total");
 
@@ -571,6 +485,43 @@ const chartInstanceRef = useRef<Chart | null>(null);
     );
   };
 
+const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+  e.preventDefault();
+  setShowAllQuestions(!showAllQuestions);
+};
+  // Get questions to display based on current state
+  const displayedQuestions = showAllQuestions
+    ? questions
+    : questions.slice(0, 3);
+
+  // Function to handle topic tag click
+  const handleTopicClick = (e:any, slug:any) => {
+    e.stopPropagation(); 
+
+    window.open(`/topics/${slug}`, "_blank");
+  };
+
+  // Function to handle question click
+  const handleQuestionClick = (url:any) => {
+    // In a real application, you would use react-router or Next.js router
+    // For demo purposes, we'll simulate navigation
+    window.open(url, "_blank");
+    // Or use: window.location.href = url; for same tab navigation
+  };
+
+  const getDifficultyColor = (difficulty:any) => {
+    switch (difficulty) {
+      case "Easy":
+        return "bg-green-500/20 text-green-400";
+      case "Medium":
+        return "bg-yellow-500/20 text-yellow-400";
+      case "Hard":
+        return "bg-red-500/20 text-red-400";
+      default:
+        return "bg-gray-500/20 text-gray-400";
+    }
+  };
+
   // Main dashboard render (your existing JSX)
   return (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
@@ -579,7 +530,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                GFG Analytics
+                LeetCode Analytics
               </h1>
               <p className="text-gray-400 text-sm md:text-base mt-1">
                 Track your coding progress and performance
@@ -587,7 +538,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
             </div>
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <img src={GFGData?.data?.avatar} />
+                <img src={leetCodeData?.data?.userAvatar} />
               </div>
             </div>
           </div>
@@ -602,8 +553,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
                   Easy Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-               {GFGData?.data?.solvedStats?.easy.count +
-                    GFGData?.data?.solvedStats?.basic.count}
+                  {leetCodeData?.submissions?.Easy}
                 </h1>
               </div>
             </div>
@@ -617,7 +567,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
                   Medium Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                {GFGData?.data?.solvedStats?.medium.count}
+                  {leetCodeData?.submissions?.Medium}
                 </h1>
               </div>
             </div>
@@ -631,7 +581,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
                   Hard Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                {GFGData?.data?.solvedStats?.hard?.count}
+                  {leetCodeData?.submissions?.Hard}
                 </h1>
               </div>
             </div>
@@ -645,7 +595,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
                   Global Ranking
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                     {GFGData?.data?.difficultyAnalysis?.difficultyScore}
+                  {leetCodeData?.data?.ranking}
                 </h1>
               </div>
             </div>
@@ -664,32 +614,33 @@ const chartInstanceRef = useRef<Chart | null>(null);
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">Username</span>
                     <span className="text-white font-medium">
-                      {user?.gfgURL || "N/A"}
-                    </span>
-                  </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">
-                      Profile completeness
-                    </span>
-                    <span className="text-white font-medium">
-                      {GFGData?.data?.profile?.profileCompleteness} %
+                      {user?.leetCodeURL || "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm"> Most Active Day</span>
+                    <span className="text-gray-400 text-sm">
+                      Total Submissions
+                    </span>
                     <span className="text-white font-medium">
                       {
-                        GFGData?.data?.activityMetrics?.weeklyPattern
-                          ?.mostActiveDay
+                        leetCodeData?.heatmap?.statistics
+                          ?.totalSubmissions
                       }
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                   <span className="text-gray-400 text-sm">Level</span>
+                    <span className="text-gray-400 text-sm">Longest Streak</span>
                     <span className="text-white font-medium">
-                      {" "}
-                      {GFGData?.data?.difficultyAnalysis?.level}
+                   { leetCodeData?.heatmap?.statistics
+                          ?.longestStreak}
                     </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">
+                     Current Streak
+                    </span>
+                    <span className="text-white font-medium">{ leetCodeData?.heatmap?.statistics
+                          ?.currentStreak}</span>
                   </div>
                 </div>
               </div>
@@ -701,7 +652,8 @@ const chartInstanceRef = useRef<Chart | null>(null);
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
           {/* Activity Heatmap */}
           <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
-           <ActivityHeatmap heatmapData={GFGData?.data?.heatmap} />
+            <ActivityHeatmap heatmapData={leetCodeData?.heatmap} />
+
           </div>
 
           {/* Question Statistics */}
@@ -711,126 +663,94 @@ const chartInstanceRef = useRef<Chart | null>(null);
                 Question Stats
               </h3>
             </div>
-            <GFGDonut />
+            <LeetCodeDonut />
           </div>
         </div>
 
         {/* Bottom Section */}
-      <div className=" bg-gray-900 p-4">
-      <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Questions Details */}
-         <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base md:text-lg font-bold text-white">
-                    Recent Solved Questions
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <div className="relative" ref={dropdownRef}>
-                      <button
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm border border-gray-600"
-                      >
-                        <span>Difficulty: {selectedDifficulty}</span>
-                        <ChevronDown
-                          className={`w-4 h-4 transition-transform ${
-                            isDropdownOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-                      {isDropdownOpen && (
-                        <div className="absolute right-0 mt-1 w-40 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-10">
-                          {difficultyOptions.map((difficulty) => (
-                            <button
-                              key={difficulty}
-                              onClick={() => handleDifficultySelect(difficulty)}
-                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                                selectedDifficulty === difficulty
-                                  ? "bg-blue-600 text-white"
-                                  : "text-gray-300"
-                              }`}
+          <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base md:text-lg font-bold text-white">
+                Recent Solved Questions
+              </h3>
+              <button onClick={toggleViewAll} className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                {showAllQuestions ? "View Less" : "View All"}
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 whitespace-nowrap w-16">
+                      ID
+                    </th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 w-1/3 min-w-[180px]">
+                      Title
+                    </th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 whitespace-nowrap w-20">
+                      Difficulty
+                    </th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 whitespace-nowrap w-20">
+                      Acceptance
+                    </th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 w-1/3 min-w-[160px]">
+                      Topic Tags
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {displayedQuestions.map((question:any, index) => (
+                    <tr
+                      key={question.id}
+                      className="hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      onClick={() => handleQuestionClick(question.url)}
+                    >
+                      <td className="py-3 px-2 text-sm text-gray-300 font-mono">
+                        {question.id}
+                      </td>
+                      <td className="py-3 px-2 text-sm text-white font-medium hover:text-blue-400 transition-colors">
+                        <div
+                          className="truncate max-w-[200px] sm:max-w-[250px] md:max-w-[300px] lg:max-w-[350px]"
+                          title={question.title}
+                        >
+                          {question.title}
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getDifficultyColor(
+                            question.difficulty
+                          )}`}
+                        >
+                          {question.difficulty}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-sm text-gray-300 whitespace-nowrap">
+                        {question.acceptanceRate}
+                      </td>
+                      <td className="py-3 px-2 text-sm text-gray-300">
+                        <div className="flex flex-wrap gap-1 max-w-[200px] sm:max-w-[250px] md:max-w-[300px]">
+                          {question.topicTags.map((tag:any, tagIndex:any) => (
+                            <span
+                              key={tag.slug}
+                              onClick={(e) => handleTopicClick(e, tag.slug)}
+                              className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500/30 cursor-pointer transition-colors whitespace-nowrap"
+                              title={tag.name}
                             >
-                              {difficulty}
-                            </button>
+                              {tag.name}
+                            </span>
                           ))}
                         </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={toggleViewAll}
-                      className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                    >
-                      {showAllQuestions ? "View Less" : "View All"}
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[700px]">
-                    <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 whitespace-nowrap w-16">
-                          ID
-                        </th>
-                        <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 w-1/3 min-w-[180px]">
-                          Title
-                        </th>
-                        <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 whitespace-nowrap w-20">
-                          Difficulty
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-700">
-                      {displayedQuestions.map((question: any, index) => {
-                        // If you add difficulty property, you can just use question.difficulty
-                        let difficulty = question.difficulty;
-                        // Or fallback for allQuestions if not set:
-                        if (!difficulty) {
-                          if (mediumQuestions.some((q) => q.id === question.id)) {
-                            difficulty = "Medium";
-                          } else if (hardQuestions.some((q) => q.id === question.id)) {
-                            difficulty = "Hard";
-                          } else {
-                            difficulty = "Easy";
-                          }
-                        }
-
-                        return (
-                          <tr
-                            key={question.id}
-                            className="hover:bg-gray-700/50 transition-colors cursor-pointer"
-                            onClick={() => handleQuestionClick(question.questionUrl)}
-                          >
-                            <td className="py-3 px-2 text-sm text-gray-300 font-mono">
-                              {question.id || index + 1}
-                            </td>
-                            <td className="py-3 px-2 text-sm text-white font-medium hover:text-blue-400 transition-colors">
-                              <div
-                                className="truncate max-w-[200px] sm:max-w-[250px] md:max-w-[300px] lg:max-w-[350px]"
-                                title={question?.question || question?.title}
-                              >
-                                {question?.question || question?.title}
-                              </div>
-                            </td>
-                            <td className="py-3 px-2">
-                              <span
-                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getDifficultyColor(
-                                  difficulty
-                                )}`}
-                              >
-                                {difficulty}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  Showing {displayedQuestions.length} of {getCurrentQuestions().length}{" "}
-                  {selectedDifficulty.toLowerCase()} questions
-                </div>
-              </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {/* Contest Details */}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
@@ -860,9 +780,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
         </div>
       </div>
     </div>
-      </div>
-    </div>
   );
 };
 
-export default GFG;
+export default LeetCode;

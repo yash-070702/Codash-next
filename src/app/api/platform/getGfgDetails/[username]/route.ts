@@ -14,10 +14,6 @@ import { getDifficultyAnalysis } from "@/lib/gfg";
 const BASE_URL = "https://geeks-for-geeks-api.vercel.app";
 
 
-interface Params {
-  username: string;
-}
-
 interface EnhancedProfile {
   profileImageUrl?: string | null;
   bio?: string | null;
