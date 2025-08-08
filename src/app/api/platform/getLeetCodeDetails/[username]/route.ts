@@ -22,13 +22,13 @@ type StreakRange = {
   length: number;
 };
 
-type YearlyStat = {
-  totalSubmissions: number;
-  activeDays: number;
-  maxSubmissionsInDay: number;
-  averageSubmissionsPerDay: string;
-  activeMonths: number;
-};
+// type YearlyStat = {
+//   totalSubmissions: number;
+//   activeDays: number;
+//   maxSubmissionsInDay: number;
+//   averageSubmissionsPerDay: string;
+//   activeMonths: number;
+// };
 type Statistics = {
   totalSubmissions: number;
   totalActiveDays: number;

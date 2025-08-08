@@ -1,66 +1,90 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { AlertCircle, User, RefreshCw } from "lucide-react";
-import Chart from "chart.js/auto";
+import React, { useState, useEffect, useRef, MouseEvent } from "react";
+import { MoreHorizontal, AlertCircle, User, RefreshCw } from "lucide-react";
+import * as Chart from "chart.js";
 import ActivityHeatmap from "@/app/components/Dashboard/ActivityHeatmap";
-import { getGFGDetails } from "@/services/platform";
+import { getCodeChefDetails } from "../../../services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
 
+// Register Chart.js components (ChartJS 4+)
+Chart.Chart.register(
+  Chart.ArcElement,
+  Chart.Tooltip,
+  Chart.Legend,
+  Chart.DoughnutController
+);
 
-const GFG = () => {
-  const [selectedSegment, setSelectedSegment] = useState<any>(null);
-  const [showAllQuestions, setShowAllQuestions] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
-
-const [GFGData, setGFGData] = useState<any>(null);
-
-  const [questions, setQuestions] = useState([]);
-    const user = useProfileStore((state) => state.user);
-    const token:string|null = useAuthStore((state) => state.token);
-    if (!token) {
-  throw new Error("No token available");
+interface TopicTag {
+  name: string;
+  slug: string;
 }
-const chartRef = useRef<HTMLCanvasElement | null>(null);
-const chartInstanceRef = useRef<Chart | null>(null);
+
+interface Question {
+  id: string | number;
+  title: string;
+  difficulty: string; // "Easy" | "Medium" | "Hard" | etc.
+  acceptanceRate?: string;
+  topicTags: TopicTag[];
+  url: string;
+}
+
+interface CodeChefData {
+  data?: {
+    latestQuestions?: Question[];
+    avatar?: string;
+    globalRank?: string | number;
+    institute?: string;
+    contestCount?: string | number;
+    countryRank?: string | number;
+    heatmap?: any;
+    totalSolved?: number;
+  };
+}
+
+const CodeChef: React.FC = () => {
+  const [selectedSegment, setSelectedSegment] = useState<any>(null);
+  const [showAllQuestions, setShowAllQuestions] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [codeChefData, setCodeChefData] = useState<CodeChefData | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  // Redux selectors (assumed typed accordingly)
+     const user = useProfileStore((state) => state.user);
+     const token:string|null = useAuthStore((state) => state.token);
+        if (!token) {
+  throw new Error("No token available");
+        }
 
   // Check if username exists
-  const hasUsername = user?.gfgURL && user.gfgURL.trim() !== "";
+  const hasUsername = user?.codeChefURL && user.codeChefURL.trim() !== "";
 
-  // Fetch GFG details
+  // Fetch CodeChef details
   useEffect(() => {
     if (!hasUsername) return;
 
-    const fetchGFGDetails = async () => {
+    const fetchCodeChefDetails = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
-        const username = user.gfgURL;
-        const details = await getGFGDetails(username, token);
-         console.log("GFG details fetched:", details);
-          setGFGData(details);
-        setQuestions(details?.latestQuestions|| []);
-      
-        
-      } catch (error) {
-        console.error("Error fetching GFG details:", error);
-        setError("Failed to fetch GFG data. Please try again.");
+        const username = user.codeChefURL;
+        const details = await getCodeChefDetails(username, token);
+        setCodeChefData(details);
+        setQuestions(details?.data?.latestQuestions || []);
+      } catch (err) {
+        console.error("Error fetching CodeChef details:", err);
+        setError("Failed to fetch CodeChef data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchGFGDetails();
-  }, [hasUsername, user?.gfgURL, token]);
+    fetchCodeChefDetails();
+  }, [hasUsername, user?.codeChefURL, token]);
 
-  console.log("GFG Data:", GFGData);
-  console.log("Questions:", questions);
-
-  // No Username Screen
-  const NoUsernameScreen = () => (
+   const NoUsernameScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -69,10 +93,10 @@ const chartInstanceRef = useRef<Chart | null>(null);
               <User className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
-              GFG Analytics
+              CodeChef Analytics
             </h1>
             <p className="text-gray-400 text-lg mb-8 max-w-md">
-              Connect your GFG profile to view your coding progress and
+              Connect your CodeChef profile to view your coding progress and
               performance analytics
             </p>
           </div>
@@ -86,7 +110,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
             </div>
 
             <p className="text-gray-300 mb-6 text-center">
-              Please provide your GFG username in your profile settings to
+              Please provide your CodeChef username in your profile settings to
               view your analytics dashboard.
             </p>
 
@@ -117,6 +141,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
   );
 
   // Loading Screen
+  
   const LoadingScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -124,7 +149,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                GFG Analytics
+                CodeChef Analytics
               </h1>
               <p className="text-gray-400 text-sm md:text-base mt-1">
                 Fetching your coding progress and performance...
@@ -147,7 +172,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
               Loading Your Data
             </h2>
             <p className="text-gray-400 text-lg mb-8">
-              Please wait while we fetch your GFG statistics...
+              Please wait while we fetch your CodeChef statistics...
             </p>
           </div>
 
@@ -176,7 +201,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
               <p className="text-gray-400 text-sm text-center">
                 Fetching data for:{" "}
                 <span className="text-white font-medium">
-                  {user?.gfgURL}
+                  {user?.codeChefURL}
                 </span>
               </p>
             </div>
@@ -185,10 +210,11 @@ const chartInstanceRef = useRef<Chart | null>(null);
       </div>
     </div>
   );
-
+  
   // Error Screen
   const ErrorScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
+/*************  ✨ Windsurf Command 🌟  *************/
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <div className="mb-8">
@@ -198,6 +224,10 @@ const chartInstanceRef = useRef<Chart | null>(null);
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Unable to Load Data
             </h1>
+            <p className="text-gray-400 text-lg mb-8 max-w-md">
+              {/* Display the error message */}
+              {error}
+            </p>
             <p className="text-gray-400 text-lg mb-8 max-w-md">{error}</p>
           </div>
 
@@ -214,299 +244,26 @@ const chartInstanceRef = useRef<Chart | null>(null);
     </div>
   );
 
-  // Show appropriate screen based on state
-  if (!hasUsername) {
-    return <NoUsernameScreen />;
-  }
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
+  const toggleViewAll = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setShowAllQuestions((prev) => !prev);
 
-  if (error) {
-    return <ErrorScreen />;
-  }
-
-  // Rest of your existing component code (baseStats, questionStats, GFGDonut, etc.)
-  const baseStats = [
-    {
-      level: "Easy",
-      solved: GFGData?.submissions?.Easy,
-      total: GFGData?.easy,
-      color: "text-green-400",
-      bgColor: "bg-green-400",
-      strokeColor: "stroke-green-400",
-      chartColor: "#4ade80",
-      details: {
-  accuracy:
-   GFGData?.submissions?.Easy !== undefined &&
-    GFGData?.GFGStats?.easy
-      ? Math.round(
-          (GFGData?.submissions?.Easy /
-            GFGData.GFGStats.easy) *
-            100
-        ) + "%"
-      : "N/A",
-  topics: ["Arrays", "Strings", "Hash Tables"],
-},
-
-    },
-    {
-      level: "Medium",
-      solved: GFGData?.submissions?.Medium,
-      total: GFGData?.GFGStats?.medium,
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-400",
-      strokeColor: "stroke-yellow-400",
-      chartColor: "#facc15",
-      details: {
-         accuracy:
-    GFGData?.submissions?.Medium !== undefined &&
-    GFGData?.GFGStats?.medium
-      ? Math.round(
-          ( GFGData?.submissions?.Medium/
-            GFGData.GFGStats.medium) *
-            100
-        ) + "%"
-      : "N/A",
-        topics: ["Trees", "DP", "Graphs"],
-      },
-    },
-    {
-      level: "Hard",
-      solved:  GFGData?.submissions?.Hard,
-      total: GFGData?.GFGStats?.hard,
-      color: "text-red-400",
-      bgColor: "bg-red-400",
-      strokeColor: "stroke-red-400",
-      chartColor: "#f87171",
-      details: {
-         accuracy:
-   GFGData?.submissions?.Hard !== undefined &&
-    GFGData?.GFGStats?.hard
-      ? Math.round(
-          (GFGData?.submissions?.Hard /
-            GFGData.GFGStats.hard) *
-            100
-        ) + "%"
-      : "N/A",
-        topics: ["Advanced Algorithms", "System Design"],
-      },
-    },
-  ];
-
-  // Calculate totals dynamically
-  const totalSolved = baseStats.reduce((acc, stat) => acc + stat.solved, 0);
-  const totalQuestions = baseStats.reduce((acc, stat) => acc + stat.total, 0);
-  const totalRecentSolved = baseStats.reduce(
-    (acc, stat:any) => acc + stat.details.recentSolved,
-    0
-  );
-
-  const questionStats = [
-    ...baseStats,
-    {
-      level: "Total",
-      solved: totalSolved,
-      total: totalQuestions,
-      color: "text-purple-400",
-      bgColor: "bg-purple-400",
-      strokeColor: "stroke-purple-400",
-      chartColor: "#c084fc",
-      details: {
-        accuracy: `${Math.round((totalSolved / totalQuestions) * 100)}%`,
-        avgTime: "22 min",
-        recentSolved: totalRecentSolved,
-        topics: ["All Topics", "Mixed Practice"],
-      },
-    },
-  ];
-
-  const GFGDonut = () => {
-    // Filter out the "Total" entry for chart display
-    const chartData = questionStats.filter((stat) => stat.level !== "Total");
-
-    const chartTotalSolved = chartData.reduce(
-      (acc, stat) => acc + stat.solved,
-      0
-    );
- useEffect(() => {
-    const canvas = chartRef.current;
-    if (!canvas) return;
-
-    // Destroy existing chart
-    chartInstanceRef.current?.destroy();
-
-    // Create new chart
-    chartInstanceRef.current = new Chart(canvas, {
-      type: "doughnut",
-      data: {
-        labels: chartData.map((stat) => stat.level),
-        datasets: [
-          {
-            data: chartData.map((stat) => stat.solved),
-            backgroundColor: chartData.map((stat) => stat.chartColor),
-            borderColor: "#1f2937",
-            borderWidth: 3,
-            hoverOffset: 8,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "60%",
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "#374151",
-            titleColor: "#ffffff",
-            bodyColor: "#ffffff",
-            borderColor: "#6b7280",
-            borderWidth: 1,
-            callbacks: {
-              label: function (context) {
-                const stat = chartData[context.dataIndex];
-                return `${stat.level}: ${stat.solved}/${stat.total}`;
-              },
-            },
-          },
-        },
-        onClick: (event, activeElements) => {
-          if (activeElements.length > 0) {
-            const index = activeElements[0].index;
-            const clickedStat = chartData[index];
-            setSelectedSegment(
-              selectedSegment?.level === clickedStat.level ? null : clickedStat
-            );
-          }
-        },
-        onHover: (event: any, activeElements) => {
-          event.native.target.style.cursor =
-            activeElements.length > 0 ? "pointer" : "default";
-        },
-      },
-    });
-
-    // Cleanup on unmount
-    return () => {
-      chartInstanceRef.current?.destroy();
     };
-  }, [chartData, selectedSegment]);
 
-    return (
-      <div className="flex flex-col items-center">
-        <div className="relative w-40 h-40 sm:w-48 sm:h-48 lg:w-40 lg:h-40 xl:w-48 xl:h-48 mb-4">
-          <canvas ref={chartRef} />
-          {/* Center text overlay */}
-          <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-            <span className="text-xl sm:text-2xl lg:text-xl xl:text-2xl font-bold text-white">
-              {chartTotalSolved}
-            </span>
-            <span className="text-xs sm:text-sm text-gray-400">Solved</span>
-          </div>
-        </div>
 
-        {/* Legend or Details */}
-        {!selectedSegment ? (
-          <div className="space-y-2 w-full">
-            {questionStats.map((stat:any, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between text-sm cursor-pointer hover:bg-gray-700 p-3 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md"
-                onClick={() => setSelectedSegment(stat)}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-full shadow-sm"
-                    style={{ backgroundColor: stat.chartColor }}
-                  />
-                  <span className="font-medium">{stat.level}</span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-white font-semibold">
-                    {stat.solved}/{stat.total}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {Math.round((stat.solved / stat.total) * 100)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="w-full bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl p-4 mt-2 shadow-lg border border-gray-600">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className={`font-bold text-lg ${selectedSegment.color}`}>
-                {selectedSegment.level} Problems
-              </h4>
-              <button
-                onClick={() => setSelectedSegment(null)}
-                className="text-gray-400 hover:text-white text-xl hover:bg-gray-600 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200"
-              >
-                ×
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <span className="text-gray-400 block text-xs">Solved</span>
-                <span className="text-white font-semibold text-lg">
-                  {selectedSegment.solved}/{selectedSegment.total}
-                </span>
-              </div>
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <span className="text-gray-400 block text-xs">Accuracy</span>
-                <span className="text-white font-semibold text-lg">
-                  {selectedSegment.details.accuracy}
-                </span>
-              </div>
-            </div>
-            <div>
-              <span className="text-gray-400 text-sm font-medium">
-                Top Topics:
-              </span>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedSegment.details.topics.map((topic:any, idx:number) => (
-                  <span
-                    key={idx}
-                    className="text-xs bg-gradient-to-r from-gray-600 to-gray-500 px-3 py-1 rounded-full text-white shadow-sm"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-  e.preventDefault();
-  setShowAllQuestions(!showAllQuestions);
-};
-  // Get questions to display based on current state
-  const displayedQuestions = showAllQuestions
-    ? questions
-    : questions.slice(0, 3);
-
-  // Function to handle topic tag click
-  const handleTopicClick = (e:any, slug:any) => {
-    e.stopPropagation(); 
-
+  const handleTopicClick = (e: MouseEvent<HTMLSpanElement>, slug: string) => {
+    e.stopPropagation(); // Prevent row click
     window.open(`/topics/${slug}`, "_blank");
   };
 
-  // Function to handle question click
-  const handleQuestionClick = (url:any) => {
-    // In a real application, you would use react-router or Next.js router
-    // For demo purposes, we'll simulate navigation
+
+  const handleQuestionClick = (url: string) => {
     window.open(url, "_blank");
-    // Or use: window.location.href = url; for same tab navigation
   };
 
-  const getDifficultyColor = (difficulty:any) => {
+ 
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
         return "bg-green-500/20 text-green-400";
@@ -519,15 +276,22 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
     }
   };
 
-  // Main dashboard render (your existing JSX)
-  return (
+  // Determine which questions to show
+  const displayedQuestions = showAllQuestions ? questions : questions.slice(0, 3);
+
+  // Render appropriate screen or main dashboard
+  if (!hasUsername) return <NoUsernameScreen />;
+  if (isLoading) return <LoadingScreen />;
+  if (error) return <ErrorScreen />;
+
+   return (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 md:mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                GFG Analytics
+                CodeChef Analytics
               </h1>
               <p className="text-gray-400 text-sm md:text-base mt-1">
                 Track your coding progress and performance
@@ -535,7 +299,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
             </div>
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <img src={GFGData?.data?.userAvatar} />
+                <img src={codeChefData?.data?.avatar} />
               </div>
             </div>
           </div>
@@ -550,7 +314,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   Easy Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {GFGData?.submissions?.Easy}
+                  Not EnoughData
                 </h1>
               </div>
             </div>
@@ -564,7 +328,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   Medium Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {GFGData?.submissions?.Medium}
+                  Not EnoughData
                 </h1>
               </div>
             </div>
@@ -578,7 +342,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   Hard Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {GFGData?.submissions?.Hard}
+                 Not EnoughData
                 </h1>
               </div>
             </div>
@@ -589,10 +353,10 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   <span className="text-white font-bold text-lg">#</span>
                 </div>
                 <p className="text-blue-400 text-sm font-medium mb-1">
-                  Global Ranking
+                  Global Rank
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {GFGData?.data?.ranking}
+                  {codeChefData?.data?.globalRank || "N/A"}
                 </h1>
               </div>
             </div>
@@ -611,33 +375,30 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">Username</span>
                     <span className="text-white font-medium">
-                      {user?.gfgURL || "N/A"}
+                      {user?.codeChefURL || "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">
-                      Total Submissions
+                      Country
                     </span>
                     <span className="text-white font-medium">
                       {
-                        GFGData?.heatmap?.statistics
-                          ?.totalSubmissions
+                        codeChefData?.data?.institute
                       }
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Longest Streak</span>
+                    <span className="text-gray-400 text-sm">Contest Count</span>
                     <span className="text-white font-medium">
-                   { GFGData?.heatmap?.statistics
-                          ?.longestStreak}
+                      {codeChefData?.data?.contestCount}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">
-                     Current Streak
+                      Country Rank
                     </span>
-                    <span className="text-white font-medium">{ GFGData?.heatmap?.statistics
-                          ?.currentStreak}</span>
+                    <span className="text-white font-medium">{codeChefData?.data?.countryRank || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -649,7 +410,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
           {/* Activity Heatmap */}
           <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
-            <ActivityHeatmap heatmapData={GFGData?.heatmap} />
+            <ActivityHeatmap heatmapData={codeChefData?.data?.heatmap} />
 
           </div>
 
@@ -660,7 +421,14 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                 Question Stats
               </h3>
             </div>
-            <GFGDonut />
+            <div className="flex items-center  justify-between mb-4">
+              <h3 className="text-base md:text-lg font-bold text-white">
+               Total Count of solved questions:
+               <p className="text-5xl text-center mt-10"> {codeChefData?.data?.totalSolved}</p>
+              </h3>            
+            </div>
+           
+            {/* <CodeChefDonut /> */}
           </div>
         </div>
 
@@ -699,7 +467,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {displayedQuestions.map((question:any, index) => (
+                  {displayedQuestions.map((question, index) => (
                     <tr
                       key={question.id}
                       className="hover:bg-gray-700/50 transition-colors cursor-pointer"
@@ -730,7 +498,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                       </td>
                       <td className="py-3 px-2 text-sm text-gray-300">
                         <div className="flex flex-wrap gap-1 max-w-[200px] sm:max-w-[250px] md:max-w-[300px]">
-                          {question.topicTags.map((tag:any, tagIndex:any) => (
+                          {question.topicTags.map((tag, tagIndex) => (
                             <span
                               key={tag.slug}
                               onClick={(e) => handleTopicClick(e, tag.slug)}
@@ -780,4 +548,4 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
   );
 };
 
-export default GFG;
+export default CodeChef;
