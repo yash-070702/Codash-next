@@ -80,7 +80,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <Image src={LeetCode} alt="leetcode" className="w-5 h-5" />
             <span>LeetCode</span>
           </Link>
+           
 
+          <Link href="/dashboard/codeforces" className={getLinkClass("/dashboard/codeforces")}>
+            <Image src={CodeForces} alt="CodeForces" className="w-5 h-5" />
+            <span>CodeForces</span>
+          </Link>
+           
           <Link href="/dashboard/gfg" className={getLinkClass("/dashboard/gfg")}>
             <Image src={GFG} alt="GFG" className="w-5 h-5" />
             <span>GeeksForGeeks</span>
@@ -96,10 +102,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <span>HackerRank</span>
           </Link>
 
-          <Link href="/dashboard/codeforces" className={getLinkClass("/dashboard/codeforces")}>
-            <Image src={CodeForces} alt="CodeForces" className="w-5 h-5" />
-            <span>CodeForces</span>
-          </Link>
+          
 
           <div className="text-sm text-gray-400 mb-4 mt-6">Settings</div>
 

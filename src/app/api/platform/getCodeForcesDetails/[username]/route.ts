@@ -1,10 +1,7 @@
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateCfHeatmap, generateDifficultyStats, getRecentlySolvedProblems } from '@/lib/codeforces';
-
-
-
-
+import { generateCfHeatmapYearWise, generateDifficultyStats, getRecentlySolvedProblems,getProblemsByDifficultyTier
+ } from '@/lib/codeforces';
 
 export async function GET(
   _req: NextRequest,
@@ -17,7 +14,7 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        message: 'LeetCode username is required',
+        message: 'Codeforces username is required',
       },
       { status: 400 }
     );
@@ -42,11 +39,14 @@ export async function GET(
     const ratingResponse = await axios.get(`https://codeforces.com/api/user.rating?handle=${username}`);
     const ratingHistory = ratingResponse.data.result;
 
+    const totalQuestions =  await getProblemsByDifficultyTier();
+
     // Fetch submissions for heatmap and difficulty stats
     const submissionsResponse = await axios.get(`https://codeforces.com/api/user.status?handle=${username}`);
     const submissions = submissionsResponse.data.result;
 
-    const heatmap = generateCfHeatmap(submissions);
+    const heatmap = generateCfHeatmapYearWise(submissions);
+
     const difficultyStats = generateDifficultyStats(submissions);
     const recentlySolved = getRecentlySolvedProblems(submissions);
 
@@ -54,6 +54,8 @@ export async function GET(
       JSON.stringify({
         success: true,
         message: "Codeforces data fetched successfully",
+        totalQuestions,
+        difficultyStats,
         data: {
           profile: {
             username: user.handle,
@@ -69,7 +71,6 @@ export async function GET(
           },
           ratingHistory,
           heatmap,
-          difficultyStats,
           recentlySolved,
         },
       }),

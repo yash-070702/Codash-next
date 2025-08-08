@@ -15,49 +15,124 @@ interface Submission {
   memoryConsumedBytes: number;
 }
 
-export function generateCfHeatmap(submissions: Submission[]) {
-  const heatmap: Record<string, number> = {};
-  submissions.forEach((submission) => {
-    const date = new Date(submission.creationTimeSeconds * 1000).toISOString().split("T")[0]; // yyyy-mm-dd
+type CodeforcesProblem = {
+  rating?: number;
+};
 
-    heatmap[date] = (heatmap[date] || 0) + 1;
+type CodeforcesAPIResponse = {
+  status: string;
+  result: {
+    problems: CodeforcesProblem[];
+  };
+};
+
+export async function getProblemsByDifficultyTier(): Promise<Record<string, number>> {
+  const url = "https://codeforces.com/api/problemset.problems";
+
+  try {
+    const res = await fetch(url);
+    const data: CodeforcesAPIResponse = await res.json();
+
+    if (data.status !== "OK") throw new Error("Failed to fetch problems");
+
+    const counts = {
+      "Easy": 0,
+      "Medium": 0,
+      "Hard": 0,
+      "Unrated": 0,
+    };
+
+    for (const problem of data.result.problems) {
+      const rating = problem.rating;
+
+      if (rating === undefined) {
+        counts["Unrated"]++;
+      } else if (rating <= 1200) {
+        counts["Easy"]++;
+      } else if (rating <= 1800) {
+        counts["Medium"]++;
+      } else  {
+        counts["Hard"]++;
+      }
+    }
+
+    console.log({ totalQuestions: counts });
+    return counts;
+  } catch (err) {
+    console.error("Error:", err);
+    return {
+      "Easy": 0,
+      "Medium": 0,
+      "Hard": 0,
+      "Very Hard": 0,
+      "Unrated": 0,
+    };
+  }
+}
+export function generateCfHeatmapYearWise(submissions: Submission[]) {
+  if (!submissions || submissions.length === 0) return {};
+
+  // Find earliest submission date (account creation approximation)
+  const timestamps = submissions.map(sub => sub.creationTimeSeconds * 1000);
+  const earliestTimestamp = Math.min(...timestamps);
+  const earliestDate = new Date(earliestTimestamp);
+
+  const startYear = earliestDate.getFullYear();
+  const currentYear = new Date().getFullYear();
+
+  // Group submissions by date string for quick count lookup
+  const submissionCountByDate: Record<string, number> = {};
+  submissions.forEach(submission => {
+    const dateStr = new Date(submission.creationTimeSeconds * 1000).toISOString().split('T')[0];
+    submissionCountByDate[dateStr] = (submissionCountByDate[dateStr] || 0) + 1;
   });
 
-  const startOfYear = new Date(new Date().getFullYear(), 0, 1);
-  const today = new Date();
-  const data = [];
+  // Helper to generate daily heatmap data for one year
+  function generateYearHeatmap(year: number) {
+    const heatmapData = [];
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
 
-  for (let d = new Date(startOfYear); d <= today; d.setDate(d.getDate() + 1)) {
-    const dateStr = d.toISOString().split("T")[0];
-    const count = heatmap[dateStr] || 0;
-    let intensity = 0;
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const count = submissionCountByDate[dateStr] || 0;
 
-    if (count === 0) intensity = 0;
-    else if (count <= 2) intensity = 1;
-    else if (count <= 5) intensity = 2;
-    else if (count <= 10) intensity = 3;
-    else intensity = 4;
+      let intensity = 0;
+      if (count === 0) intensity = 0;
+      else if (count <= 2) intensity = 1;
+      else if (count <= 5) intensity = 2;
+      else if (count <= 10) intensity = 3;
+      else intensity = 4;
 
-    data.push({
-      date: dateStr,
-      count,
-      intensity,
-      dayOfWeek: d.getDay(),
-      week: Math.ceil((d.getTime() - startOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000)),
-      month: d.getMonth() + 1,
-      day: d.getDate(),
-    });
+      heatmapData.push({
+        date: dateStr,
+        count,
+        intensity,
+        dayOfWeek: d.getDay(),
+        week: Math.ceil((d.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)),
+        month: d.getMonth() + 1,
+        day: d.getDate(),
+        year,
+      });
+    }
+    return heatmapData;
   }
 
-  return data;
+  // Generate heatmap for all years from earliest to current
+  const heatmapByYear: Record<number, ReturnType<typeof generateYearHeatmap>> = {};
+  for (let y = startYear; y <= currentYear; y++) {
+    heatmapByYear[y] = generateYearHeatmap(y);
+  }
+
+  return heatmapByYear;
 }
+
 
 export function generateDifficultyStats(submissions: Submission[]) {
   const difficultyStats = {
-    "Easy (≤1200)": 0,
-    "Medium (1201-1800)": 0,
-    "Hard (1801-2400)": 0,
-    "Very Hard (2401+)": 0,
+    "Easy": 0,
+    "Medium": 0,
+    "Hard": 0,
     Unrated: 0,
   };
 
@@ -75,18 +150,15 @@ export function generateDifficultyStats(submissions: Submission[]) {
         if (!rating) {
           difficultyStats["Unrated"]++;
         } else if (rating <= 1200) {
-          difficultyStats["Easy (≤1200)"]++;
+          difficultyStats["Easy"]++;
         } else if (rating <= 1800) {
-          difficultyStats["Medium (1201-1800)"]++;
-        } else if (rating <= 2400) {
-          difficultyStats["Hard (1801-2400)"]++;
-        } else {
-          difficultyStats["Very Hard (2401+)"]++;
-        }
+          difficultyStats["Medium"]++;
+        } else{
+          difficultyStats["Hard"]++;
+        } 
       }
     }
   });
-
   return difficultyStats;
 }
 

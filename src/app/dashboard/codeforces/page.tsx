@@ -3,22 +3,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MoreHorizontal, AlertCircle, User, RefreshCw } from "lucide-react";
 import Chart from "chart.js/auto";
-import ActivityHeatmap from "@/app/components/Dashboard/ActivityHeatmap";
-import { getLeeCodeDetails } from "@/services/platform";
+import ActivityHeatMapCF from "@/app/components/Dashboard/ActivityHeatMapCF";
+import { getCodeForcesDetails } from "@/services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
+import CodeforcesAnalytics from "@/app/components/Dashboard/CodeForceContest";
 
-
-
-
-
-const LeetCode = () => {
+const CodeForces = () => {
   const [selectedSegment, setSelectedSegment] = useState<any>(null);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
 
-const [leetCodeData, setLeetCodeData] = useState<any>(null);
+const [codeForcesData, setCodeForcesData] = useState<any>(null);
 
   const [questions, setQuestions] = useState([]);
     const user = useProfileStore((state) => state.user);
@@ -30,39 +27,34 @@ const chartRef = useRef<HTMLCanvasElement | null>(null);
 const chartInstanceRef = useRef<Chart | null>(null);
 
   // Check if username exists
-  const hasUsername = user?.leetCodeURL && user.leetCodeURL.trim() !== "";
+  const hasUsername = user?.codeforcesURL && user.codeforcesURL.trim() !== "";
 
-  // Fetch LeetCode details
+  // Fetch codefroces details
   useEffect(() => {
     if (!hasUsername) return;
 
-    const fetchLeetCodeDetails = async () => {
+    const fetchCodeForcesDetails = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const username = user.leetCodeURL;
-        const details = await getLeeCodeDetails(username, token);
-        // console.log("LeetCode details fetched:", details);
-          setLeetCodeData(details);
-        setQuestions(details?.latestQuestions|| []);
+        const username = user.codeforcesURL;
+        const details = await getCodeForcesDetails(username, token);
+        setCodeForcesData(details);
+        setQuestions(details?.data?.recentlySolved?.problems|| []);
       
         
       } catch (error) {
-        console.error("Error fetching LeetCode details:", error);
-        setError("Failed to fetch LeetCode data. Please try again.");
+        console.error("Error fetching CodeForces details:", error);
+        setError("Failed to fetch CodeForces data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchLeetCodeDetails();
-  }, [hasUsername, user?.leetCodeURL, token]);
-
-  console.log("LeetCode Data:", leetCodeData);
-  console.log("Questions:", questions);
-
-  // No Username Screen
+      fetchCodeForcesDetails();
+  }, [hasUsername, user?.codeforcesURL, token]);
+ 
   const NoUsernameScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
@@ -72,10 +64,10 @@ const chartInstanceRef = useRef<Chart | null>(null);
               <User className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
-              LeetCode Analytics
+              CodeForces Analytics
             </h1>
             <p className="text-gray-400 text-lg mb-8 max-w-md">
-              Connect your LeetCode profile to view your coding progress and
+              Connect your CodeForces profile to view your coding progress and
               performance analytics
             </p>
           </div>
@@ -89,7 +81,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
             </div>
 
             <p className="text-gray-300 mb-6 text-center">
-              Please provide your LeetCode username in your profile settings to
+              Please provide your CodeForces username in your profile settings to
               view your analytics dashboard.
             </p>
 
@@ -119,7 +111,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
     </div>
   );
 
-  // Loading Screen
+ 
   const LoadingScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -127,7 +119,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                LeetCode Analytics
+  CodeForces Analytics
               </h1>
               <p className="text-gray-400 text-sm md:text-base mt-1">
                 Fetching your coding progress and performance...
@@ -150,7 +142,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
               Loading Your Data
             </h2>
             <p className="text-gray-400 text-lg mb-8">
-              Please wait while we fetch your LeetCode statistics...
+              Please wait while we fetch your CodeForces statistics...
             </p>
           </div>
 
@@ -179,7 +171,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
               <p className="text-gray-400 text-sm text-center">
                 Fetching data for:{" "}
                 <span className="text-white font-medium">
-                  {user?.leetCodeURL}
+                  {user?.codeforcesURL}
                 </span>
               </p>
             </div>
@@ -189,7 +181,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
     </div>
   );
 
-  // Error Screen
+
   const ErrorScreen = () => (
     <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
@@ -217,7 +209,6 @@ const chartInstanceRef = useRef<Chart | null>(null);
     </div>
   );
 
-  // Show appropriate screen based on state
   if (!hasUsername) {
     return <NoUsernameScreen />;
   }
@@ -226,27 +217,31 @@ const chartInstanceRef = useRef<Chart | null>(null);
     return <LoadingScreen />;
   }
 
+   if (!codeForcesData) {
+    return <LoadingScreen />;
+  }
+
   if (error) {
     return <ErrorScreen />;
   }
 
-  // Rest of your existing component code (baseStats, questionStats, LeetCodeDonut, etc.)
+ 
   const baseStats = [
     {
       level: "Easy",
-      solved: leetCodeData?.submissions?.Easy,
-      total: leetCodeData?.leetCodeStats?.easy,
+      solved: codeForcesData?.difficultyStats?.Easy,
+      total: codeForcesData?.totalQuestions?.Easy,
       color: "text-green-400",
       bgColor: "bg-green-400",
       strokeColor: "stroke-green-400",
       chartColor: "#4ade80",
       details: {
   accuracy:
-   leetCodeData?.submissions?.Easy !== undefined &&
-    leetCodeData?.leetCodeStats?.easy
+   codeForcesData?.difficultyStats?.Easy!== undefined &&
+    codeForcesData?.totalQuestions?.Easy
       ? Math.round(
-          (leetCodeData?.submissions?.Easy /
-            leetCodeData.leetCodeStats.easy) *
+          (codeForcesData?.difficultyStats?.Easy/
+            codeForcesData?.totalQuestions?.Easy) *
             100
         ) + "%"
       : "N/A",
@@ -256,19 +251,19 @@ const chartInstanceRef = useRef<Chart | null>(null);
     },
     {
       level: "Medium",
-      solved: leetCodeData?.submissions?.Medium,
-      total: leetCodeData?.leetCodeStats?.medium,
+      solved: codeForcesData?.difficultyStats?.Medium,
+      total: codeForcesData?.totalQuestions?.Medium,
       color: "text-yellow-400",
       bgColor: "bg-yellow-400",
       strokeColor: "stroke-yellow-400",
       chartColor: "#facc15",
       details: {
          accuracy:
-    leetCodeData?.submissions?.Medium !== undefined &&
-    leetCodeData?.leetCodeStats?.medium
+    codeForcesData?.difficultyStats?.Medium!== undefined &&
+    codeForcesData?.totalQuestions?.Medium
       ? Math.round(
-          ( leetCodeData?.submissions?.Medium/
-            leetCodeData.leetCodeStats.medium) *
+          ( codeForcesData?.difficultyStats?.Medium/
+            codeForcesData?.totalQuestions?.Medium) *
             100
         ) + "%"
       : "N/A",
@@ -277,19 +272,40 @@ const chartInstanceRef = useRef<Chart | null>(null);
     },
     {
       level: "Hard",
-      solved:  leetCodeData?.submissions?.Hard,
-      total: leetCodeData?.leetCodeStats?.hard,
+      solved:  codeForcesData?.difficultyStats?.Hard,
+      total: codeForcesData?.totalQuestions?.Hard,
       color: "text-red-400",
       bgColor: "bg-red-400",
       strokeColor: "stroke-red-400",
       chartColor: "#f87171",
       details: {
          accuracy:
-   leetCodeData?.submissions?.Hard !== undefined &&
-    leetCodeData?.leetCodeStats?.hard
+   codeForcesData?.difficultyStats?.Hard!== undefined &&
+   codeForcesData?.totalQuestions?.Hard
       ? Math.round(
-          (leetCodeData?.submissions?.Hard /
-            leetCodeData.leetCodeStats.hard) *
+          ( codeForcesData?.difficultyStats?.Hard /
+            codeForcesData?.totalQuestions?.Hard) *
+            100
+        ) + "%"
+      : "N/A",
+        topics: ["Advanced Algorithms", "System Design"],
+      },
+    },
+    {
+      level: "Unrated",
+      solved:  codeForcesData?.difficultyStats?.Unrated,
+      total: codeForcesData?.totalQuestions?.Unrated,
+      color: "text-orange-100",
+      bgColor: "bg-yellow-100",
+      strokeColor: "stroke-yellow-100",
+      chartColor: "#f07179",
+      details: {
+         accuracy:
+   codeForcesData?.difficultyStats?.Unrated!== undefined &&
+   codeForcesData?.totalQuestions?.Unrated
+      ? Math.round(
+          ( codeForcesData?.difficultyStats?.Unrated /
+            codeForcesData?.totalQuestions?.Unrated) *
             100
         ) + "%"
       : "N/A",
@@ -325,7 +341,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
     },
   ];
 
-  const LeetCodeDonut = () => {
+  const CodeForcesDonut = () => {
     // Filter out the "Total" entry for chart display
     const chartData = questionStats.filter((stat) => stat.level !== "Total");
 
@@ -492,7 +508,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
   // Get questions to display based on current state
   const displayedQuestions = showAllQuestions
     ? questions
-    : questions.slice(0, 3);
+    : questions.slice(0, 5);
 
   // Function to handle topic tag click
   const handleTopicClick = (e:any, slug:any) => {
@@ -503,10 +519,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
 
   // Function to handle question click
   const handleQuestionClick = (url:any) => {
-    // In a real application, you would use react-router or Next.js router
-    // For demo purposes, we'll simulate navigation
     window.open(url, "_blank");
-    // Or use: window.location.href = url; for same tab navigation
   };
 
   const getDifficultyColor = (difficulty:any) => {
@@ -530,7 +543,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                LeetCode Analytics
+                CodeForces Analytics
               </h1>
               <p className="text-gray-400 text-sm md:text-base mt-1">
                 Track your coding progress and performance
@@ -538,7 +551,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
             </div>
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <img src={leetCodeData?.data?.userAvatar} />
+                <img src={codeForcesData?.data?.userAvatar} />
               </div>
             </div>
           </div>
@@ -553,7 +566,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   Easy Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {leetCodeData?.submissions?.Easy}
+                  {codeForcesData?.difficultyStats?.Easy}
                 </h1>
               </div>
             </div>
@@ -567,7 +580,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   Medium Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {leetCodeData?.submissions?.Medium}
+                  {codeForcesData?.difficultyStats?.Medium}
                 </h1>
               </div>
             </div>
@@ -581,10 +594,12 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   Hard Solved
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {leetCodeData?.submissions?.Hard}
+                  {codeForcesData?.difficultyStats?.Hard}
                 </h1>
               </div>
             </div>
+
+            
 
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 shadow-lg border border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="flex flex-col items-center justify-center h-full">
@@ -592,10 +607,10 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   <span className="text-white font-bold text-lg">#</span>
                 </div>
                 <p className="text-blue-400 text-sm font-medium mb-1">
-                  Global Ranking
+                 Current Rating
                 </p>
                 <h1 className="text-2xl font-bold text-white">
-                  {leetCodeData?.data?.ranking}
+                   {codeForcesData?.data?.profile?.rating}
                 </h1>
               </div>
             </div>
@@ -614,33 +629,30 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">Username</span>
                     <span className="text-white font-medium">
-                      {user?.leetCodeURL || "N/A"}
+                      {user?.codeforcesURL || "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">
-                      Total Submissions
+                     Rank
                     </span>
                     <span className="text-white font-medium">
-                      {
-                        leetCodeData?.heatmap?.statistics
-                          ?.totalSubmissions
-                      }
+                      {codeForcesData?.data?.profile?.rank}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Longest Streak</span>
+                    <span className="text-gray-400 text-sm">Contribution</span>
                     <span className="text-white font-medium">
-                   { leetCodeData?.heatmap?.statistics
-                          ?.longestStreak}
+                    {codeForcesData?.data?.profile?.contribution}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">
-                     Current Streak
+                    Freinds
                     </span>
-                    <span className="text-white font-medium">{ leetCodeData?.heatmap?.statistics
-                          ?.currentStreak}</span>
+                    <span className="text-white font-medium">
+                     {codeForcesData?.data?.profile?.friendOfCount}
+                          </span>
                   </div>
                 </div>
               </div>
@@ -652,8 +664,8 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
           {/* Activity Heatmap */}
           <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
-            <ActivityHeatmap heatmapData={leetCodeData?.heatmap} />
-
+            <ActivityHeatMapCF heatmapData={codeForcesData?.data?.heatmap} /> 
+            
           </div>
 
           {/* Question Statistics */}
@@ -663,7 +675,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                 Question Stats
               </h3>
             </div>
-            <LeetCodeDonut />
+            <CodeForcesDonut />
           </div>
         </div>
 
@@ -694,7 +706,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                       Difficulty
                     </th>
                     <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 whitespace-nowrap w-20">
-                      Acceptance
+                      Rating
                     </th>
                     <th className="text-left py-3 px-2 text-sm font-medium text-gray-400 w-1/3 min-w-[160px]">
                       Topic Tags
@@ -704,19 +716,19 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                 <tbody className="divide-y divide-gray-700">
                   {displayedQuestions.map((question:any, index) => (
                     <tr
-                      key={question.id}
+                      key={index}
                       className="hover:bg-gray-700/50 transition-colors cursor-pointer"
                       onClick={() => handleQuestionClick(question.url)}
                     >
                       <td className="py-3 px-2 text-sm text-gray-300 font-mono">
-                        {question.id}
+                        {question.problemId}
                       </td>
                       <td className="py-3 px-2 text-sm text-white font-medium hover:text-blue-400 transition-colors">
                         <div
                           className="truncate max-w-[200px] sm:max-w-[250px] md:max-w-[300px] lg:max-w-[350px]"
-                          title={question.title}
+                          title={question.name}
                         >
-                          {question.title}
+                          {question.name}
                         </div>
                       </td>
                       <td className="py-3 px-2">
@@ -729,20 +741,21 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                         </span>
                       </td>
                       <td className="py-3 px-2 text-sm text-gray-300 whitespace-nowrap">
-                        {question.acceptanceRate}
+                        {question.rating}
                       </td>
                       <td className="py-3 px-2 text-sm text-gray-300">
                         <div className="flex flex-wrap gap-1 max-w-[200px] sm:max-w-[250px] md:max-w-[300px]">
-                          {question.topicTags.map((tag:any, tagIndex:any) => (
-                            <span
-                              key={tag.slug}
-                              onClick={(e) => handleTopicClick(e, tag.slug)}
-                              className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500/30 cursor-pointer transition-colors whitespace-nowrap"
-                              title={tag.name}
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
+                         {question.tags.slice(0, 3).map((tag: any, tagIndex: number) => (
+                         <span
+                            key={tag.slug || tag}
+                             onClick={(e) => handleTopicClick(e, tag.slug || tag)}
+                            className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500/30 cursor-pointer transition-colors whitespace-nowrap"
+                               title={tag}
+                                            >
+                                  {tag}
+                                   </span>
+                                 ))}
+
                         </div>
                       </td>
                     </tr>
@@ -753,34 +766,12 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
           </div>
 
           {/* Contest Details */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base md:text-lg font-bold text-white">
-                Contest Details
-              </h3>
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">🏆</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <p className="text-gray-400 text-sm mb-2">
-                  No contest data available
-                </p>
-                <p className="text-gray-500 text-xs">
-                  Participate in contests to see your stats here
-                </p>
-              </div>
-            </div>
-          </div>
+    
+          <CodeforcesAnalytics ratingHistory={codeForcesData?.data?.ratingHistory} /> 
         </div>
       </div>
     </div>
   );
 };
 
-export default LeetCode;
+export default CodeForces;
