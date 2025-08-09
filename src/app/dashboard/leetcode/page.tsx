@@ -753,9 +753,6 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
               </table>
             </div>
           </div>
-
-          {/* Contest Details */}
-      
         </div>
       </div>
     </div>

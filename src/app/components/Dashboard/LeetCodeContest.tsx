@@ -55,7 +55,7 @@ interface LeetCodeAnalyticsProps {
 }
 
 const LeetCodeAnalytics: React.FC<LeetCodeAnalyticsProps> = ({ ranking, history }) => {
-  if (!history || history.length === 0) {
+  if (!history || history.length === 0|| !ranking) {
     return( 
       <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
         <div className="flex items-center justify-between mb-4">

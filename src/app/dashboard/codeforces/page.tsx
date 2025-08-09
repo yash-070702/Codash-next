@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { MoreHorizontal, AlertCircle, User, RefreshCw } from "lucide-react";
+import { AlertCircle, User, RefreshCw } from "lucide-react";
 import Chart from "chart.js/auto";
 import ActivityHeatMapCF from "@/app/components/Dashboard/ActivityHeatMapCF";
 import { getCodeForcesDetails } from "@/services/platform";
