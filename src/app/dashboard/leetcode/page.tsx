@@ -7,6 +7,7 @@ import ActivityHeatmap from "@/app/components/Dashboard/ActivityHeatmap";
 import { getLeeCodeDetails } from "@/services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
+import LeetCodeAnalytics from "@/app/components/Dashboard/LeetCodeContest";
 
 
 
@@ -43,7 +44,7 @@ const chartInstanceRef = useRef<Chart | null>(null);
       try {
         const username = user.leetCodeURL;
         const details = await getLeeCodeDetails(username, token);
-        // console.log("LeetCode details fetched:", details);
+         console.log("LeetCode details fetched:", details.contestDetails);
           setLeetCodeData(details);
         setQuestions(details?.latestQuestions|| []);
       
@@ -653,7 +654,6 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
           {/* Activity Heatmap */}
           <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
             <ActivityHeatmap heatmapData={leetCodeData?.heatmap} />
-
           </div>
 
           {/* Question Statistics */}
@@ -666,9 +666,11 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
             <LeetCodeDonut />
           </div>
         </div>
+   <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">    <LeetCodeAnalytics ranking={leetCodeData?.contestDetails?.ranking} history={leetCodeData?.contestDetails?.history} /></div>
+                
 
         {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 mt-5 gap-6">
           {/* Questions Details */}
           <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
             <div className="flex items-center justify-between mb-4">
@@ -753,30 +755,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
           </div>
 
           {/* Contest Details */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base md:text-lg font-bold text-white">
-                Contest Details
-              </h3>
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">🏆</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <p className="text-gray-400 text-sm mb-2">
-                  No contest data available
-                </p>
-                <p className="text-gray-500 text-xs">
-                  Participate in contests to see your stats here
-                </p>
-              </div>
-            </div>
-          </div>
+      
         </div>
       </div>
     </div>

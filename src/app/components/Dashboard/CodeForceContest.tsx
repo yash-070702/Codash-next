@@ -42,6 +42,37 @@ interface CodeforcesAnalyticsProps {
 }
 
 const CodeforcesAnalytics: React.FC<CodeforcesAnalyticsProps> = ({ ratingHistory }) => {
+  if (!ratingHistory || ratingHistory.length === 0) {
+    return( 
+  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base md:text-lg font-bold text-white">
+                Contest Details
+              </h3>
+              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">🏆</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <p className="text-gray-400 text-sm mb-2">
+                  No contest data available
+                </p>
+                <p className="text-gray-500 text-xs">
+                  Participate in contests to see your stats here
+                </p>
+              </div>
+            </div>
+          </div>
+          
+   )
+  }
+
+  // Debugging output
  console.log("Rating History:", ratingHistory);
   const [selectedView, setSelectedView] = useState<'overview' | 'progress' | 'performance'>('overview');
 

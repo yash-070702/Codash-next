@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCodeChefHeatmap } from '@/lib/codechef';
+import { getCodeChefHeatmap } from '@/lib/codechef';
 // Types for response data structures
 interface Question {
   code: string;
@@ -111,6 +112,8 @@ export async function GET(
 
     // Generate heatmap data
     const heatmapResult = await generateCodeChefHeatmap(username);
+    // const hhh= await getCodeChefHeatmap(username);
+    // console.log('Heatmap Data:', hhh);
 
     return new Response(
       JSON.stringify({

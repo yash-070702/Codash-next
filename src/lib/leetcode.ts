@@ -91,6 +91,84 @@ type MonthlyStat = {
 
 type MonthlyStatsMap = Record<string, MonthlyStat>;
 
+interface ContestRanking {
+  attendedContestsCount: number;
+  rating: number;
+  globalRanking: number;
+  totalParticipants: number;
+  topPercentage: number;
+}
+
+interface ContestHistory {
+  contest: {
+    title: string;
+    startTime: number;
+  };
+  rating: number;
+  ranking: number;
+  attended: boolean;
+  trendDirection: string;
+}
+
+interface ContestData {
+  ranking: ContestRanking | null;
+  history: ContestHistory[];
+}
+
+export async function getLeetCodeContestDetails(username: string): Promise<ContestData> {
+  const endpoint = "https://leetcode.com/graphql";
+
+  const query = `
+    query getContestData($username: String!) {
+      userContestRanking(username: $username) {
+        attendedContestsCount
+        rating
+        globalRanking
+        totalParticipants
+        topPercentage
+      }
+      userContestRankingHistory(username: $username) {
+        contest {
+          title
+          startTime
+        }
+        rating
+        ranking
+        attended
+        trendDirection
+      }
+    }
+  `;
+
+  const body = JSON.stringify({
+    query,
+    variables: { username },
+  });
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(`LeetCode API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  if (data.errors) {
+    throw new Error(`LeetCode API error: ${JSON.stringify(data.errors)}`);
+  }
+
+  return {
+    ranking: data.data.userContestRanking,
+    history: data.data.userContestRankingHistory,
+  };
+}
+
 export async function fetchHistoricalSubmissions(graphqlUrl: string, username: string, activeYears: number[]): Promise<Submission[]>  {
   const allHistoricalData: Submission[] = [];
 

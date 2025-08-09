@@ -29,6 +29,27 @@ interface HeatmapStats {
   lastSubmissionDate: string | null;
 }
 
+export async function getCodeChefHeatmap(username: string) {
+  const url = `https://cp-api.vercel.app/codechef/${username}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch CodeChef data: ${res.status}`);
+
+  const data = await res.json();
+
+  if (!data.success) {
+    throw new Error(`CodeChef API returned error: ${data.message || "Unknown error"}`);
+  }
+
+  return {
+    rating: data.rating,
+    stars: data.stars,
+    solved: data.solvedProblems,
+    heatmap: data.heatmap,
+    contests: data.contestHistory
+  };
+}
+
 export async function generateCodeChefHeatmap(username: string): Promise<HeatmapResult> {
   const result: HeatmapResult = {
     heatmapData: [],

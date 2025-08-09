@@ -6,7 +6,7 @@ import { fetchHistoricalSubmissions } from '@/lib/leetcode';
 import { fillMissingDates } from '@/lib/leetcode';
 import { fetchLeetCodeQuestionCounts } from '@/lib/leetcode';
 import { calculateHeatmapStatistics } from '@/lib/leetcode';
-
+import { getLeetCodeContestDetails } from '@/lib/leetcode';
 type Submission = {
   date: string;
   count: number;
@@ -22,13 +22,6 @@ type StreakRange = {
   length: number;
 };
 
-// type YearlyStat = {
-//   totalSubmissions: number;
-//   activeDays: number;
-//   maxSubmissionsInDay: number;
-//   averageSubmissionsPerDay: string;
-//   activeMonths: number;
-// };
 type Statistics = {
   totalSubmissions: number;
   totalActiveDays: number;
@@ -75,6 +68,7 @@ export async function GET(
   try {
     const graphqlUrl = 'https://leetcode.com/graphql';
     const leetCodeStats = await fetchLeetCodeQuestionCounts();
+    const contestDetails = await getLeetCodeContestDetails(username);
 
     // Step 1: Profile Query
     const profileQuery = {
@@ -421,6 +415,7 @@ const latestDate = new Date(
       submissions,
       recentSolved,
       heatmap,
+      contestDetails,
       latestQuestions,
       trendingQuestions,
     });

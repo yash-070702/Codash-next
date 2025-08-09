@@ -20,6 +20,7 @@
     "mongoose": "^8.16.4",
     "next": "15.4.3",
     "next-auth": "^4.24.11",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.1",
     "otp-generator": "^4.0.1",
     "react": "19.1.0",

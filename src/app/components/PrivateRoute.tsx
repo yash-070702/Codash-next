@@ -1,27 +1,27 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
 
-// PRIVATE
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { token, isLoading } = useAuth();
+export default function PrivateRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { token } = useAuthStore();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !token) {
-      toast.error('You must be logged in to access this page.');
-      router.push('/auth');
+    if (!token) {
+      toast.error('Please log in to continue');
+      router.replace('/auth');
+    } else {
+      setChecking(false);
     }
-  }, [token, isLoading]);
+  }, [token, router]);
 
-  if (isLoading) return null; // Optional: can show a loading spinner here
-
-  if (!token) return null;
+  if (checking) {
+    return null;
+  }
 
   return <>{children}</>;
-};
-
-export default PrivateRoute;
+}
