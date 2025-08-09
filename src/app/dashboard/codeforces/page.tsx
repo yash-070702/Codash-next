@@ -7,7 +7,7 @@ import ActivityHeatMapCF from "@/app/components/Dashboard/ActivityHeatMapCF";
 import { getCodeForcesDetails } from "@/services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
-import CodeforcesAnalytics from "@/app/components/Dashboard/CodeForceContest";
+import CodeforcesAnalytics from "@/app/components/Dashboard/hello";
 
 const CodeForces = () => {
   const [selectedSegment, setSelectedSegment] = useState<any>(null);
