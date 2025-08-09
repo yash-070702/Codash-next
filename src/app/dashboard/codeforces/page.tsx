@@ -7,7 +7,7 @@ import ActivityHeatMapCF from "@/app/components/Dashboard/ActivityHeatMapCF";
 import { getCodeForcesDetails } from "@/services/platform";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
-import CodeforcesAnalytics from "@/app/components/Dashboard/hello";
+import CodeforcesAnalytics from "@/app/components/Dashboard/CodeForceContest";
 
 const CodeForces = () => {
   const [selectedSegment, setSelectedSegment] = useState<any>(null);
@@ -679,8 +679,13 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
           </div>
         </div>
 
+           <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700"> 
+          
+            <CodeforcesAnalytics ratingHistory={codeForcesData?.data?.ratingHistory} /> 
+           </div>
+
         {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 mt-5 gap-6">
           {/* Questions Details */}
           <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 md:p-6 shadow-lg border border-gray-700">
             <div className="flex items-center justify-between mb-4">
@@ -763,11 +768,7 @@ const toggleViewAll = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Contest Details */}
-    
-          <CodeforcesAnalytics ratingHistory={codeForcesData?.data?.ratingHistory} /> 
+          </div>    
         </div>
       </div>
     </div>
