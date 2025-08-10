@@ -20,6 +20,23 @@ interface Info {
   streak?: number;
   totalSolved?: number;
 }
+
+export async function fetchGFGUserDetails(username: string): Promise<any> {
+  const apiUrl = `https://geeks-for-geeks-api.vercel.app/${username}`;
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching GFG user details:", error);
+    return null;
+  }
+}
+
+
 export async function getEnhancedProfileData(username: string): Promise<EnhancedProfile> {
   try {
     const profileUrl = `https://auth.geeksforgeeks.org/user/${username}`;

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import puppeteer from "puppeteer";
 interface HeatmapResult {
   heatmapData: HeatmapDay[];
   stats: HeatmapStats;
@@ -27,6 +28,68 @@ interface HeatmapStats {
   averageSubmissionsPerDay: number;
   mostActiveMonth: string | null;
   lastSubmissionDate: string | null;
+}
+
+interface ContestEntry {
+  contest: string;
+  rank: string;
+  score: string;
+}
+
+interface CodeChefData {
+  heatmap: Record<string, number>;
+  contests: ContestEntry[];
+}
+
+export async function fetchCodeChefHeatmapAndContests(username: string): Promise<CodeChefData> {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  const page = await browser.newPage();
+  await page.goto(`https://www.codechef.com/users/${username}`, {
+    waitUntil: "networkidle2",
+    timeout: 30000,
+  });
+
+  // Extract heatmap from JS variables in scripts
+  const heatmap = await page.evaluate(() => {
+    const scripts = Array.from(document.querySelectorAll("script"));
+    for (const script of scripts) {
+      const text = script.textContent;
+      if (text && text.includes("calendar")) {
+        const match = text.match(/"calendar"\s*:\s*(\{[^}]+\})/);
+        if (match) {
+          try {
+            return JSON.parse(match[1]) as Record<string, number>;
+          } catch {
+            return {};
+          }
+        }
+      }
+    }
+    return {};
+  });
+
+  // Extract contest history from the "Contest Participated" table
+  const contests = await page.evaluate(() => {
+    const contestRows = Array.from(
+      document.querySelectorAll("#contest-participated table tbody tr")
+    );
+
+    return contestRows.map(row => {
+      const cols = row.querySelectorAll("td");
+      return {
+        contest: cols[0]?.textContent?.trim() || "",
+        rank: cols[1]?.textContent?.trim() || "",
+        score: cols[2]?.textContent?.trim() || "",
+      };
+    });
+  });
+
+  await browser.close();
+  return { heatmap, contests };
 }
 
 export async function getCodeChefHeatmap(username: string) {

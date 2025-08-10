@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { getEnhancedProfileData} from "@/lib/gfg";
+import { fetchGFGUserDetails, getEnhancedProfileData} from "@/lib/gfg";
 import { calculateTotalQuestions } from "@/lib/gfg";
 import { generateHeatmapData } from "@/lib/gfg";
 import { generateEmptyHeatmapData } from "@/lib/gfg";
@@ -76,6 +76,8 @@ export async function GET(
     const insights = generateInsights(solvedStats, calendar, info);
     const difficultyAnalysis = getDifficultyAnalysis(solvedStats);
     const activityMetrics = calculateActivityMetrics(calendar);
+    const hhh= await fetchGFGUserDetails(username);
+    console.log("Fetched GFG user details:", hhh);
 
     return NextResponse.json({
       success: true,
