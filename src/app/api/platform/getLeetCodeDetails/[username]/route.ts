@@ -403,7 +403,7 @@ const latestDate = new Date(
       console.warn("Could not fetch trending questions:", trendingErr.message);
     }
 
-    return NextResponse.json({
+    const res= NextResponse.json({
       success: true,
       username,
       profileUrl,
@@ -419,6 +419,13 @@ const latestDate = new Date(
       latestQuestions,
       trendingQuestions,
     });
+
+    res.headers.set("Access-Control-Allow-Origin", "*");
+  res.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type");
+
+  return res;
+
   } catch (err: any) {
     console.error(err.message);
     return NextResponse.json(
@@ -429,3 +436,10 @@ const latestDate = new Date(
 }
 
 
+export async function OPTIONS() {
+  const res = new NextResponse(null, { status: 204 });
+  res.headers.set("Access-Control-Allow-Origin", "*");
+  res.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  return res;
+}

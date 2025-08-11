@@ -1,15 +1,15 @@
-{
-  "eslint.enable": false,
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "files.exclude": {
-    "**/.git": true,
-    "**/.next": true,
-    "**/node_modules": true,
-    "**/dist": true
-  },
-  "javascript.validate.enable": false,
-  "typescript.validate.enable": false
-}
+// {
+//   "eslint.enable": false,
+//   "editor.formatOnSave": true,
+//   "editor.codeActionsOnSave": {
+//     "source.fixAll.eslint": "explicit"
+//   },
+//   "files.exclude": {
+//     "**/.git": true,
+//     "**/.next": true,
+//     "**/node_modules": true,
+//     "**/dist": true
+//   },
+//   "javascript.validate.enable": false,
+//   "typescript.validate.enable": false
+// }
